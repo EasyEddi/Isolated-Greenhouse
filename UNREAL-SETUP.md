@@ -2,9 +2,9 @@
 
 ## Version
 
-Use Unreal Engine 5.6 for this project.
+Use Unreal Engine 5.8 for this project.
 
-Both team members should use the same engine version. Do not mix 5.5, 5.6, and preview versions.
+Both team members should use the same engine version. Do not mix 5.6, 5.7, 5.8, and preview versions.
 
 ## Git LFS
 
@@ -20,10 +20,10 @@ The repository already contains `.gitattributes` rules for common Unreal asset f
 
 ## First Unreal Steps
 
-1. Install Unreal Engine 5.6.
+1. Install Unreal Engine 5.8.
 2. Open `TheIsolatedGreenhouse.uproject`.
 3. Let Unreal generate any missing project files if it asks.
-4. Create a first empty level named `L_Greenhouse_MVP`.
+4. Create a first empty level named `L_Greenhouse_MVP` inside `Content/Maps`.
 5. Save the level.
 6. Commit the new Unreal files on branch `eddi/unreal-project-setup`.
 7. Open a pull request and let Tarek review it.

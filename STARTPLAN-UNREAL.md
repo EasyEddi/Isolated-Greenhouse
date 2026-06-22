@@ -21,7 +21,7 @@ Der Spieler ist allein in einer warmen, friedlichen Gewaechshaus-Halle. Er pfleg
 
 ## Technische Basis
 
-- Engine: Unreal Engine 5.6.
+- Engine: Unreal Engine 5.8.
 - Umsetzung: Blueprint-only, wenn moeglich.
 - Repository: GitHub.
 - Asset-Dateien: Git LFS verwenden.
@@ -91,7 +91,7 @@ Beispiele:
 
 #### Phase 1: Unreal-Projekt aufsetzen
 
-- [x] Unreal-Version festlegen: Unreal Engine 5.6.
+- [x] Unreal-Version festlegen: Unreal Engine 5.8.
 - [ ] Unreal-Projekt `TheIsolatedGreenhouse` erstellen.
 - [ ] Blueprint-only Projekt verwenden.
 - [x] Unreal `.gitignore` hinzufuegen.
@@ -218,7 +218,7 @@ Beispiele:
 
 ### Gemeinsam
 
-- Unreal Engine 5.6 verwenden.
+- Unreal Engine 5.8 verwenden.
 - Projekt oeffnet bei beiden.
 - Git LFS pruefen.
 - Pull Requests reviewen.
@@ -228,10 +228,10 @@ Beispiele:
 
 ## Erste konkrete Schritte
 
-1. Unreal Engine 5.6 installieren.
+1. Unreal Engine 5.8 installieren.
 2. Dieses Repo lokal bei beiden klonen.
 3. Git LFS installieren und aktivieren.
-4. `TheIsolatedGreenhouse.uproject` in Unreal 5.6 oeffnen.
+4. `TheIsolatedGreenhouse.uproject` in Unreal 5.8 oeffnen.
 5. Erste leere Map `L_Greenhouse_MVP` speichern.
 6. Branch `eddi/unreal-project-setup` erstellen.
 7. Setup committen und Pull Request oeffnen.
