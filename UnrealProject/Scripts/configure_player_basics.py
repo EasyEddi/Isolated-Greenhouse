@@ -7,6 +7,8 @@ MANNY_PLACEHOLDER_MESH = "/Game/Characters/Mannequins/Meshes/SKM_Manny_Simple"
 INVISIBLE_MATERIAL = "/Game/Characters/Mannequins/Materials/M_Invisible_FirstPersonPlaceholder"
 MOUSE_SENSITIVITY = 0.12
 CAMERA_HEIGHT_CM = 170.0
+CAPSULE_RADIUS_CM = 70.0
+CAPSULE_HALF_HEIGHT_CM = 180.0
 FIRST_PERSON_MESH_PROPERTIES = (
     "FirstPersonMesh",
     "CharacterMesh",
@@ -78,21 +80,92 @@ def hide_skeletal_component(component, hidden_mesh):
 
 def configure_camera_component(component, parent_component=None):
     if parent_component:
-        try:
-            component.attach_to_component(
-                parent_component,
-                "",
-                unreal.AttachmentRule.KEEP_RELATIVE,
-                unreal.AttachmentRule.KEEP_RELATIVE,
-                unreal.AttachmentRule.KEEP_RELATIVE,
-                False,
-            )
-        except Exception:
-            pass
+        for attach_call in (
+            lambda: component.setup_attachment(parent_component, ""),
+            lambda: component.set_editor_property("attach_parent", parent_component),
+        ):
+            try:
+                attach_call()
+                break
+            except Exception:
+                continue
 
     component.set_editor_property("relative_location", unreal.Vector(0.0, 0.0, CAMERA_HEIGHT_CM))
     component.set_editor_property("relative_rotation", unreal.Rotator(0.0, 0.0, 0.0))
     component.set_editor_property("use_pawn_control_rotation", True)
+
+
+def configure_capsule_component(component):
+    for method_name, value in (
+        ("set_capsule_radius", CAPSULE_RADIUS_CM),
+        ("set_capsule_half_height", CAPSULE_HALF_HEIGHT_CM),
+    ):
+        try:
+            getattr(component, method_name)(value, True)
+        except Exception:
+            pass
+
+    for property_name, value in (
+        ("capsule_radius", CAPSULE_RADIUS_CM),
+        ("capsule_half_height", CAPSULE_HALF_HEIGHT_CM),
+    ):
+        try:
+            component.set_editor_property(property_name, value)
+        except Exception:
+            pass
+
+
+def reparent_camera_to_capsule(character_bp, generated_class, subobject_subsystem):
+    if not subobject_subsystem:
+        return False
+
+    handles = subobject_subsystem.k2_gather_subobject_data_for_blueprint(character_bp)
+    capsule_handle = None
+    camera_handle = None
+    seen_components = set()
+
+    for handle in handles:
+        data = unreal.SubobjectDataBlueprintFunctionLibrary.get_data(handle)
+        component = unreal.SubobjectDataBlueprintFunctionLibrary.get_object_for_blueprint(
+            data,
+            character_bp,
+        )
+        if not component:
+            continue
+
+        path = component.get_path_name()
+        if path in seen_components:
+            continue
+        seen_components.add(path)
+
+        if isinstance(component, unreal.CapsuleComponent):
+            capsule_handle = handle
+        elif isinstance(component, unreal.CameraComponent):
+            camera_handle = handle
+
+    if not capsule_handle or not camera_handle:
+        return False
+
+    preview_actor = None
+    try:
+        preview_actor = unreal.EditorLevelLibrary.spawn_actor_from_class(
+            generated_class,
+            unreal.Vector(0.0, 0.0, -100000.0),
+            unreal.Rotator(0.0, 0.0, 0.0),
+        )
+        preview_actor.set_actor_label("TEMP_BP_FirstPersonCharacter_CameraPreview")
+        preview_actor.set_actor_hidden_in_game(True)
+
+        params = unreal.ReparentSubobjectParams()
+        params.set_editor_property("new_parent_handle", capsule_handle)
+        params.set_editor_property("blueprint_context", character_bp)
+        params.set_editor_property("actor_preview_context", preview_actor)
+        result = subobject_subsystem.reparent_subobject(params, camera_handle)
+        unreal.log(f"Reparented first-person camera to capsule: {result}")
+        return bool(result)
+    finally:
+        if preview_actor:
+            unreal.EditorLevelLibrary.destroy_actor(preview_actor)
 
 
 def invisible_material():
@@ -153,6 +226,8 @@ def configure_character_mesh():
     if not hidden_mesh:
         raise RuntimeError(f"Missing placeholder mesh: {MANNY_PLACEHOLDER_MESH}")
     capsule_component = cdo.get_component_by_class(unreal.CapsuleComponent)
+    if capsule_component:
+        configure_capsule_component(capsule_component)
 
     for property_name in ("base_eye_height", "BaseEyeHeight"):
         try:
@@ -202,6 +277,9 @@ def configure_character_mesh():
             if isinstance(component, unreal.SkeletalMeshComponent):
                 hide_skeletal_component(component, hidden_mesh)
                 changed.add(component.get_path_name())
+            elif isinstance(component, unreal.CapsuleComponent):
+                configure_capsule_component(component)
+                changed.add(component.get_path_name())
             elif isinstance(component, unreal.CameraComponent):
                 configure_camera_component(component, capsule_component)
                 changed.add(component.get_path_name())
@@ -211,6 +289,7 @@ def configure_character_mesh():
         subobject_subsystem = unreal.get_editor_subsystem(unreal.SubobjectDataSubsystem)
 
     if subobject_subsystem:
+        reparent_camera_to_capsule(character_bp, generated_class, subobject_subsystem)
         handles = subobject_subsystem.k2_gather_subobject_data_for_blueprint(character_bp)
         for handle in handles:
             data = unreal.SubobjectDataBlueprintFunctionLibrary.get_data(handle)
@@ -220,6 +299,9 @@ def configure_character_mesh():
             )
             if isinstance(component, unreal.SkeletalMeshComponent):
                 hide_skeletal_component(component, hidden_mesh)
+                changed.add(component.get_path_name())
+            elif isinstance(component, unreal.CapsuleComponent):
+                configure_capsule_component(component)
                 changed.add(component.get_path_name())
             elif isinstance(component, unreal.CameraComponent):
                 configure_camera_component(component, capsule_component)
