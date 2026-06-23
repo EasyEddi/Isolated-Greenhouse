@@ -163,6 +163,23 @@ def configure_character_mesh():
                 hide_skeletal_component(component)
                 changed.add(component.get_path_name())
 
+    subobject_subsystem = unreal.get_engine_subsystem(unreal.SubobjectDataSubsystem)
+    if not subobject_subsystem:
+        subobject_subsystem = unreal.get_editor_subsystem(unreal.SubobjectDataSubsystem)
+
+    if subobject_subsystem:
+        handles = subobject_subsystem.k2_gather_subobject_data_for_blueprint(character_bp)
+        for handle in handles:
+            data = unreal.SubobjectDataBlueprintFunctionLibrary.get_data(handle)
+            component = unreal.SubobjectDataBlueprintFunctionLibrary.get_object_for_blueprint(
+                data,
+                character_bp,
+            )
+            if isinstance(component, unreal.SkeletalMeshComponent):
+                hide_skeletal_component(component)
+                changed.add(component.get_path_name())
+
+    unreal.BlueprintEditorLibrary.compile_blueprint(character_bp)
     unreal.EditorAssetLibrary.save_loaded_asset(character_bp)
     unreal.log(
         "Configured "
