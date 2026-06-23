@@ -6,9 +6,10 @@ FIRST_PERSON_CHARACTER = "/Game/FirstPerson/Blueprints/BP_FirstPersonCharacter"
 MANNY_PLACEHOLDER_MESH = "/Game/Characters/Mannequins/Meshes/SKM_Manny_Simple"
 INVISIBLE_MATERIAL = "/Game/Characters/Mannequins/Materials/M_Invisible_FirstPersonPlaceholder"
 MOUSE_SENSITIVITY = 0.12
-CAMERA_HEIGHT_CM = 170.0
 CAPSULE_RADIUS_CM = 70.0
 CAPSULE_HALF_HEIGHT_CM = 180.0
+EYE_HEIGHT_CM = 170.0
+CAMERA_RELATIVE_HEIGHT_CM = EYE_HEIGHT_CM - CAPSULE_HALF_HEIGHT_CM
 FIRST_PERSON_MESH_PROPERTIES = (
     "FirstPersonMesh",
     "CharacterMesh",
@@ -90,7 +91,10 @@ def configure_camera_component(component, parent_component=None):
             except Exception:
                 continue
 
-    component.set_editor_property("relative_location", unreal.Vector(0.0, 0.0, CAMERA_HEIGHT_CM))
+    component.set_editor_property(
+        "relative_location",
+        unreal.Vector(0.0, 0.0, CAMERA_RELATIVE_HEIGHT_CM),
+    )
     component.set_editor_property("relative_rotation", unreal.Rotator(0.0, 0.0, 0.0))
     component.set_editor_property("use_pawn_control_rotation", True)
 
@@ -231,7 +235,7 @@ def configure_character_mesh():
 
     for property_name in ("base_eye_height", "BaseEyeHeight"):
         try:
-            cdo.set_editor_property(property_name, CAMERA_HEIGHT_CM)
+            cdo.set_editor_property(property_name, EYE_HEIGHT_CM)
         except Exception:
             pass
 
@@ -312,7 +316,7 @@ def configure_character_mesh():
     unreal.log(
         "Configured "
         f"{len(changed)} first-person component(s) with invisible character mesh "
-        f"and centered camera height {CAMERA_HEIGHT_CM}cm."
+        f"and centered eye height {EYE_HEIGHT_CM}cm."
     )
 
 
