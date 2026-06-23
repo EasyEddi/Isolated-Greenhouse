@@ -255,8 +255,8 @@ def add_rectangular_hall():
     hall_length = 2400
     hall_width = 1600
     wall_thickness = 120
-    inner_liner_thickness = 40
-    inner_liner_offset = 65
+    collision_guard_thickness = 20
+    collision_guard_offset = 65
     wall_height = 520
     floor_thickness = 20
     half_length = hall_length / 2
@@ -295,31 +295,35 @@ def add_rectangular_hall():
         "wall_right",
     )
 
-    # The First Person camera can slightly outrun the player capsule near walls.
-    # A visible inner brick liner keeps the blocking surface and the rendered wall aligned.
+    # First-person cameras can clip into a visible wall before the player capsule feels blocked.
+    # These invisible blockers stop the pawn slightly inside the hall so the view stays in-bounds.
     cube(
-        "Hall_Back_wall_inner_brick_liner",
-        (-half_length + inner_liner_offset, 0, wall_height / 2),
-        (inner_liner_thickness / 100, hall_width / 100, wall_height / 100),
+        "Hall_Back_wall_camera_guard",
+        (-half_length + collision_guard_offset, 0, wall_height / 2),
+        (collision_guard_thickness / 100, hall_width / 100, wall_height / 100),
         "wall_back",
+        visible=False,
     )
     cube(
-        "Hall_Front_wall_inner_brick_liner",
-        (half_length - inner_liner_offset, 0, wall_height / 2),
-        (inner_liner_thickness / 100, hall_width / 100, wall_height / 100),
+        "Hall_Front_wall_camera_guard",
+        (half_length - collision_guard_offset, 0, wall_height / 2),
+        (collision_guard_thickness / 100, hall_width / 100, wall_height / 100),
         "wall_front",
+        visible=False,
     )
     cube(
-        "Hall_Left_wall_inner_brick_liner",
-        (0, -half_width + inner_liner_offset, wall_height / 2),
-        (hall_length / 100, inner_liner_thickness / 100, wall_height / 100),
+        "Hall_Left_wall_camera_guard",
+        (0, -half_width + collision_guard_offset, wall_height / 2),
+        (hall_length / 100, collision_guard_thickness / 100, wall_height / 100),
         "wall_left",
+        visible=False,
     )
     cube(
-        "Hall_Right_wall_inner_brick_liner",
-        (0, half_width - inner_liner_offset, wall_height / 2),
-        (hall_length / 100, inner_liner_thickness / 100, wall_height / 100),
+        "Hall_Right_wall_camera_guard",
+        (0, half_width - collision_guard_offset, wall_height / 2),
+        (hall_length / 100, collision_guard_thickness / 100, wall_height / 100),
         "wall_right",
+        visible=False,
     )
 
 
