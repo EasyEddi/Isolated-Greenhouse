@@ -77,38 +77,62 @@ def make_rubber_floor_png(path, size=768):
     write_png(path, size, size, pixels)
 
 
-def make_damaged_brick_png(path, size=1024):
-    rng = random.Random(73)
-    brick_w = 160
-    brick_h = 70
-    mortar = 8
-    damage_centers = [(210, 240, 130), (760, 350, 105), (510, 720, 150), (875, 825, 90)]
+def pseudo_noise(x, y, seed):
+    value = (x * 73856093) ^ (y * 19349663) ^ (seed * 83492791)
+    return ((value & 1023) / 1023.0) * 2.0 - 1.0
+
+
+def make_damaged_brick_png(path, size=768, seed=73):
+    rng = random.Random(seed)
+    brick_w = 132
+    brick_h = 58
+    mortar = 6
+    damage_centers = []
+    for _ in range(6):
+        damage_centers.append(
+            (
+                rng.randint(80, size - 80),
+                rng.randint(80, size - 80),
+                rng.randint(45, 125),
+                rng.uniform(0.45, 1.05),
+            )
+        )
     pixels = []
 
     for y in range(size):
         row = y // brick_h
-        offset = (brick_w // 2) if row % 2 else 0
+        row_wobble = int(10 * math.sin(row * 1.7) + 5 * math.sin(row * 0.37))
+        offset = ((brick_w // 2) + row_wobble) if row % 2 else row_wobble
         for x in range(size):
             local_x = (x + offset) % brick_w
             local_y = y % brick_h
             is_mortar = local_x < mortar or local_y < mortar
 
             chip_strength = 0.0
-            for cx, cy, radius in damage_centers:
+            for cx, cy, radius, weight in damage_centers:
                 distance = math.hypot(x - cx, y - cy)
                 if distance < radius:
-                    edge_noise = 0.72 + 0.22 * math.sin(x * 0.081) + 0.18 * math.sin(y * 0.067)
-                    chip_strength = max(chip_strength, max(0.0, (1.0 - distance / radius) * edge_noise))
+                    edge_noise = (
+                        0.58
+                        + 0.22 * math.sin(x * 0.041 + seed)
+                        + 0.18 * math.sin(y * 0.053)
+                        + 0.14 * math.sin((x + y) * 0.019)
+                    )
+                    chip_strength = max(chip_strength, max(0.0, (1.0 - distance / radius) * edge_noise * weight))
 
             if is_mortar:
-                base = 88 + rng.randint(-10, 8)
+                base = 84 + 12 * pseudo_noise(x // 5, y // 5, seed) + 5 * math.sin((x + y) * 0.013)
                 color = (base, base - 2, base - 7)
             else:
-                variation = 18 * math.sin((x // 9) * 0.8) + 10 * math.sin((y // 11) * 0.7) + rng.randint(-14, 14)
-                color = (145 + variation, 68 + variation * 0.35, 45 + variation * 0.25)
+                brick_index = (x + offset) // brick_w + row * 17
+                brick_tint = 24 * pseudo_noise(brick_index, row, seed)
+                broad_stain = 16 * math.sin(x * 0.006 + seed * 0.3) + 13 * math.sin(y * 0.009)
+                grain = 10 * math.sin((x // 13) * 0.8) + 7 * math.sin((y // 17) * 0.7)
+                variation = broad_stain + grain + brick_tint + 10 * pseudo_noise(x // 4, y // 4, seed + 11)
+                color = (142 + variation, 67 + variation * 0.34, 45 + variation * 0.24)
 
             if chip_strength > 0.18 and not is_mortar:
-                plaster = 150 + rng.randint(-18, 20)
+                plaster = 150 + 20 * pseudo_noise(x // 7, y // 7, seed + 23)
                 color = (
                     color[0] * (1 - chip_strength) + plaster * chip_strength,
                     color[1] * (1 - chip_strength) + (plaster - 8) * chip_strength,
@@ -219,11 +243,11 @@ def set_map_game_mode():
 
 
 def add_rectangular_hall():
-    # Unreal cube base size is 100cm. This hall is 24m x 16m with 4m high walls.
+    # Unreal cube base size is 100cm. This hall is 24m x 16m with tall open walls.
     hall_length = 2400
     hall_width = 1600
     wall_thickness = 30
-    wall_height = 400
+    wall_height = 520
     floor_thickness = 20
 
     cube(
@@ -237,25 +261,25 @@ def add_rectangular_hall():
         "Hall_Back_wall_damaged_brick",
         (-hall_length / 2, 0, wall_height / 2),
         (wall_thickness / 100, hall_width / 100, wall_height / 100),
-        "wall",
+        "wall_back",
     )
     cube(
         "Hall_Front_wall_damaged_brick",
         (hall_length / 2, 0, wall_height / 2),
         (wall_thickness / 100, hall_width / 100, wall_height / 100),
-        "wall",
+        "wall_front",
     )
     cube(
         "Hall_Left_wall_damaged_brick",
         (0, -hall_width / 2, wall_height / 2),
         (hall_length / 100, wall_thickness / 100, wall_height / 100),
-        "wall",
+        "wall_left",
     )
     cube(
         "Hall_Right_wall_damaged_brick",
         (0, hall_width / 2, wall_height / 2),
         (hall_length / 100, wall_thickness / 100, wall_height / 100),
-        "wall",
+        "wall_right",
     )
 
 
@@ -316,9 +340,24 @@ def main():
             import_texture("T_Hall_Rubber_Floor", make_rubber_floor_png),
             0.96,
         ),
-        "wall": make_textured_material(
-            "M_Hall_Damaged_Brick_Wall",
-            import_texture("T_Hall_Damaged_Brick_Wall", make_damaged_brick_png),
+        "wall_back": make_textured_material(
+            "M_Hall_Damaged_Brick_Wall_Back",
+            import_texture("T_Hall_Damaged_Brick_Wall_Back", lambda path: make_damaged_brick_png(path, seed=73)),
+            0.91,
+        ),
+        "wall_front": make_textured_material(
+            "M_Hall_Damaged_Brick_Wall_Front",
+            import_texture("T_Hall_Damaged_Brick_Wall_Front", lambda path: make_damaged_brick_png(path, seed=181)),
+            0.91,
+        ),
+        "wall_left": make_textured_material(
+            "M_Hall_Damaged_Brick_Wall_Left",
+            import_texture("T_Hall_Damaged_Brick_Wall_Left", lambda path: make_damaged_brick_png(path, seed=409)),
+            0.91,
+        ),
+        "wall_right": make_textured_material(
+            "M_Hall_Damaged_Brick_Wall_Right",
+            import_texture("T_Hall_Damaged_Brick_Wall_Right", lambda path: make_damaged_brick_png(path, seed=827)),
             0.91,
         ),
     }
@@ -330,6 +369,7 @@ def main():
     unreal.EditorLevelLibrary.save_current_level()
     unreal.EditorAssetLibrary.save_directory("/Game/Art", only_if_is_dirty=False, recursive=True)
     unreal.log("Created playable hall map: textured floor/walls, daylight, spawn, and walking GameMode.")
+    unreal.SystemLibrary.execute_console_command(None, "QUIT_EDITOR")
 
 
 if __name__ == "__main__":
