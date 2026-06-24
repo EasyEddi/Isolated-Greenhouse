@@ -247,6 +247,20 @@ def make_solid_material(name, color, roughness=0.96):
 
 
 MATERIALS = {}
+HALL_LENGTH = 2400
+HALL_WIDTH = 1600
+WALL_THICKNESS = 120
+WALL_HEIGHT = 520
+FLOOR_THICKNESS = 20
+WALL_SURFACE_PANEL_DEPTH = 8
+WALL_PANEL_WIDTH = 140
+WALL_PANEL_HEIGHT = 95
+DAMAGE_CLUSTERS = {
+    "back": ((-515, 270, 300, 155, 1201), (315, 395, 235, 130, 1202)),
+    "front": ((-240, 310, 270, 160, 1301), (570, 190, 210, 115, 1302)),
+    "left": ((-770, 345, 310, 170, 1401), (430, 225, 240, 135, 1402)),
+    "right": ((-420, 410, 260, 150, 1501), (830, 285, 330, 170, 1502)),
+}
 
 
 def material(name):
@@ -278,85 +292,140 @@ def damage_cube(label, location, scale, mat_name):
     return actor
 
 
-def wall_damage_piece(label, wall, horizontal, z, width, height, depth, mat_name):
-    half_length = 1200
-    half_width = 800
-    surface_offset = 1.6
+def wall_inner_plane(wall):
+    half_length = HALL_LENGTH / 2
+    half_width = HALL_WIDTH / 2
+    if wall == "back":
+        return -half_length, unreal.Vector(1.0, 0.0, 0.0)
+    if wall == "front":
+        return half_length, unreal.Vector(-1.0, 0.0, 0.0)
+    if wall == "left":
+        return -half_width, unreal.Vector(0.0, 1.0, 0.0)
+    if wall == "right":
+        return half_width, unreal.Vector(0.0, -1.0, 0.0)
+    raise ValueError(f"Unknown wall: {wall}")
+
+
+def oriented_wall_piece(label, wall, horizontal, z, width, height, depth, mat_name, inset=0.0):
+    plane, normal = wall_inner_plane(wall)
+    center_offset = (depth / 2) - inset
     if wall == "back":
         return damage_cube(
             label,
-            (-half_length + surface_offset, horizontal, z),
+            (plane + normal.x * center_offset, horizontal, z),
             (depth / 100, width / 100, height / 100),
             mat_name,
         )
     if wall == "front":
         return damage_cube(
             label,
-            (half_length - surface_offset, horizontal, z),
+            (plane + normal.x * center_offset, horizontal, z),
             (depth / 100, width / 100, height / 100),
             mat_name,
         )
     if wall == "left":
         return damage_cube(
             label,
-            (horizontal, -half_width + surface_offset, z),
+            (horizontal, plane + normal.y * center_offset, z),
             (width / 100, depth / 100, height / 100),
             mat_name,
         )
     if wall == "right":
         return damage_cube(
             label,
-            (horizontal, half_width - surface_offset, z),
+            (horizontal, plane + normal.y * center_offset, z),
             (width / 100, depth / 100, height / 100),
             mat_name,
         )
-    raise ValueError(f"Unknown wall: {wall}")
+
+
+def interval_cells(start, end, step):
+    cells = []
+    cursor = start
+    while cursor < end - 0.01:
+        next_cursor = min(cursor + step, end)
+        cells.append(((cursor + next_cursor) / 2, next_cursor - cursor))
+        cursor = next_cursor
+    return cells
+
+
+def damage_strength(wall, horizontal, z):
+    strength = 0.0
+    for center, dz, width, height, seed in DAMAGE_CLUSTERS[wall]:
+        wobble = 0.13 * smooth_noise(horizontal, z, seed, 95)
+        normalized = ((horizontal - center) / (width / 2)) ** 2 + ((z - dz) / (height / 2)) ** 2
+        strength = max(strength, 1.0 - normalized + wobble)
+    return strength
+
+
+def add_wall_surface(wall, length, mat_name):
+    for horizontal, width in interval_cells(-length / 2, length / 2, WALL_PANEL_WIDTH):
+        for z, height in interval_cells(0, WALL_HEIGHT, WALL_PANEL_HEIGHT):
+            strength = damage_strength(wall, horizontal, z)
+            if strength > 0.12:
+                continue
+
+            panel_inset = max(0.0, 5.0 * strength)
+            oriented_wall_piece(
+                f"Hall_{wall}_brick_segment_{horizontal:.0f}_{z:.0f}",
+                wall,
+                horizontal,
+                z,
+                width + 2,
+                height + 2,
+                WALL_SURFACE_PANEL_DEPTH,
+                mat_name,
+                panel_inset,
+            )
 
 
 def add_damage_cluster(wall, center, z, width, height, seed):
     rng = random.Random(seed)
-    wall_damage_piece(
+    oriented_wall_piece(
         f"WallDamage_{wall}_{seed}_deep_shadow",
         wall,
         center,
         z,
-        width * 0.62,
-        height * 0.48,
-        2.0,
+        width * 0.72,
+        height * 0.54,
+        8.0,
         "damage_dark",
+        15.0,
     )
 
-    for index in range(10):
-        piece_w = rng.uniform(width * 0.22, width * 0.48)
-        piece_h = rng.uniform(height * 0.14, height * 0.32)
+    for index in range(14):
+        piece_w = rng.uniform(width * 0.16, width * 0.42)
+        piece_h = rng.uniform(height * 0.12, height * 0.28)
         px = center + rng.uniform(-width * 0.42, width * 0.42)
         pz = z + rng.uniform(-height * 0.35, height * 0.35)
         mat_name = "damage_shadow" if index < 3 else "damage_plaster"
-        wall_damage_piece(
+        oriented_wall_piece(
             f"WallDamage_{wall}_{seed}_chip_{index:02d}",
             wall,
             px,
             pz,
             piece_w,
             piece_h,
-            rng.uniform(2.8, 6.5),
+            rng.uniform(4.0, 7.0),
             mat_name,
+            rng.uniform(7.0, 14.0),
         )
 
-    for index in range(6):
-        piece_w = rng.uniform(width * 0.12, width * 0.28)
-        piece_h = rng.uniform(height * 0.07, height * 0.18)
+    for index in range(10):
+        piece_w = rng.uniform(width * 0.10, width * 0.22)
+        piece_h = rng.uniform(height * 0.06, height * 0.15)
         px = center + rng.choice((-1, 1)) * rng.uniform(width * 0.34, width * 0.56)
         pz = z + rng.uniform(-height * 0.38, height * 0.38)
-        wall_damage_piece(
+        oriented_wall_piece(
             f"WallDamage_{wall}_{seed}_broken_edge_{index:02d}",
             wall,
             px,
             pz,
             piece_w,
             piece_h,
-            rng.uniform(3.8, 8.0),
+            rng.uniform(5.0, 8.0),
             "damage_broken_brick",
+            rng.uniform(2.0, 6.5),
         )
 
 
@@ -376,11 +445,11 @@ def set_map_game_mode():
 
 def add_rectangular_hall():
     # Unreal cube base size is 100cm. This hall is 24m x 16m with tall open walls.
-    hall_length = 2400
-    hall_width = 1600
-    wall_thickness = 120
-    wall_height = 520
-    floor_thickness = 20
+    hall_length = HALL_LENGTH
+    hall_width = HALL_WIDTH
+    wall_thickness = WALL_THICKNESS
+    wall_height = WALL_HEIGHT
+    floor_thickness = FLOOR_THICKNESS
     half_length = hall_length / 2
     half_width = hall_width / 2
     half_wall = wall_thickness / 2
@@ -396,35 +465,35 @@ def add_rectangular_hall():
         "Hall_Back_wall_damaged_brick",
         (-half_length - half_wall, 0, wall_height / 2),
         (wall_thickness / 100, hall_width / 100, wall_height / 100),
-        "wall_back",
+        "wall_core",
     )
     cube(
         "Hall_Front_wall_damaged_brick",
         (half_length + half_wall, 0, wall_height / 2),
         (wall_thickness / 100, hall_width / 100, wall_height / 100),
-        "wall_front",
+        "wall_core",
     )
     cube(
         "Hall_Left_wall_damaged_brick",
         (0, -half_width - half_wall, wall_height / 2),
         (hall_length / 100, wall_thickness / 100, wall_height / 100),
-        "wall_left",
+        "wall_core",
     )
     cube(
         "Hall_Right_wall_damaged_brick",
         (0, half_width + half_wall, wall_height / 2),
         (hall_length / 100, wall_thickness / 100, wall_height / 100),
-        "wall_right",
+        "wall_core",
     )
 
-    add_damage_cluster("back", -515, 270, 300, 155, 1201)
-    add_damage_cluster("back", 315, 395, 235, 130, 1202)
-    add_damage_cluster("front", -240, 310, 270, 160, 1301)
-    add_damage_cluster("front", 570, 190, 210, 115, 1302)
-    add_damage_cluster("left", -770, 345, 310, 170, 1401)
-    add_damage_cluster("left", 430, 225, 240, 135, 1402)
-    add_damage_cluster("right", -420, 410, 260, 150, 1501)
-    add_damage_cluster("right", 830, 285, 330, 170, 1502)
+    add_wall_surface("back", hall_width, "wall_back")
+    add_wall_surface("front", hall_width, "wall_front")
+    add_wall_surface("left", hall_length, "wall_left")
+    add_wall_surface("right", hall_length, "wall_right")
+
+    for wall, clusters in DAMAGE_CLUSTERS.items():
+        for cluster in clusters:
+            add_damage_cluster(wall, *cluster)
 
 
 def add_daylight():
@@ -511,6 +580,11 @@ def main():
             0.91,
             7.0,
             2.0,
+        ),
+        "wall_core": make_solid_material(
+            "M_Hall_Wall_Dark_Core",
+            (0.045, 0.040, 0.037, 1.0),
+            0.99,
         ),
         "damage_dark": make_solid_material(
             "M_Hall_Wall_Damage_Dark_Recess",
