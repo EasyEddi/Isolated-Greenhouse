@@ -383,7 +383,7 @@ def add_wall_surface(wall, length, mat_name):
 def add_damage_cluster(wall, center, z, width, height, seed):
     rng = random.Random(seed)
 
-    for index in range(48):
+    for index in range(56):
         angle = rng.uniform(0.0, math.tau)
         radius = math.sqrt(rng.uniform(0.0, 1.0))
         px = center + math.cos(angle) * radius * width * rng.uniform(0.10, 0.48)
@@ -400,11 +400,28 @@ def add_damage_cluster(wall, center, z, width, height, seed):
             rng.uniform(width * 0.055, width * 0.13),
             rng.uniform(height * 0.045, height * 0.12),
             rng.uniform(3.0, 7.0),
-            "damage_dark" if index < 30 else "damage_shadow",
+            "damage_shadow" if index < 44 else "damage_dark",
             rng.uniform(14.0, 27.0) * max(0.45, edge_fade),
         )
 
-    for index in range(34):
+    for index in range(42):
+        angle = rng.uniform(0.0, math.tau)
+        radius = math.sqrt(rng.uniform(0.0, 0.72))
+        px = center + math.cos(angle) * radius * width * 0.43
+        pz = z + math.sin(angle) * radius * height * 0.41
+        oriented_wall_piece(
+            f"WallDamage_{wall}_{seed}_inner_plaster_chip_{index:02d}",
+            wall,
+            px,
+            pz,
+            rng.uniform(width * 0.035, width * 0.105),
+            rng.uniform(height * 0.025, height * 0.085),
+            rng.uniform(2.5, 5.5),
+            "damage_plaster" if index % 5 else "damage_broken_brick",
+            rng.uniform(7.0, 20.0),
+        )
+
+    for index in range(40):
         angle = rng.uniform(0.0, math.tau)
         radius = rng.uniform(0.38, 1.03)
         px = center + math.cos(angle) * radius * width * 0.50
@@ -598,17 +615,17 @@ def main():
         ),
         "damage_dark": make_solid_material(
             "M_Hall_Wall_Damage_Dark_Recess",
-            (0.055, 0.048, 0.044, 1.0),
+            (0.34, 0.31, 0.25, 1.0),
             0.98,
         ),
         "damage_shadow": make_solid_material(
             "M_Hall_Wall_Damage_Shadow_Plaster",
-            (0.22, 0.20, 0.18, 1.0),
+            (0.47, 0.43, 0.35, 1.0),
             0.98,
         ),
         "damage_plaster": make_solid_material(
             "M_Hall_Wall_Damage_Exposed_Plaster",
-            (0.50, 0.47, 0.41, 1.0),
+            (0.72, 0.66, 0.55, 1.0),
             0.98,
         ),
         "damage_broken_brick": make_solid_material(
