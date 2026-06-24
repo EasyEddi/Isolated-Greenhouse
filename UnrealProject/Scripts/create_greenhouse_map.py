@@ -293,24 +293,12 @@ DAMAGE_CLUSTERS = {
 MODEL_SPECS = {
     "bed": ("Props/Bed/Bed.obj", 100.0),
     "desk_setup": ("Props/Office_Desk_Setup/Office_Desk_Setup.obj", 100.0),
-    "storage_shelf": ("Props/Storage_Shelf/Storage_Shelf.obj", 100.0),
-    "empty_pot": ("Props/FlowerPots/Empty_Flower_Pot/Empty_Flower_Pot.obj", 100.0),
-    "soil_pot": ("Props/FlowerPots/Flower_Pot_With_Soil/Flower_Pot_With_Soil.obj", 100.0),
-    "fertilized_pot": (
-        "Props/FlowerPots/Flower_Pot_With_Soil_And_Fertilizer/Flower_Pot_With_Soil_And_Fertilizer.obj",
-        100.0,
-    ),
-    "soil_bag": ("Props/PottingSoilBag/SM_Prop_PottingSoilBag_01.obj", 1.0),
-    "fertilizer_bag": ("Props/OrganicFertilizerBag/SM_Prop_OrganicFertilizerBag_01.obj", 1.0),
-    "watering_can": ("Props/WateringCan/SM_Prop_WateringCan_01.obj", 1.0),
-    "large_watering_can": ("Props/Large_Watering_Can/Large_Watering_Can.obj", 100.0),
-    "trowel": ("Props/Garden_Trowel/Garden_Trowel.obj", 100.0),
-    "secateur": ("Props/Secateur/Secateur/Secateur.obj", 100.0),
     "fridge": ("Props/Refrigerator/SM_Prop_Refrigerator_01.obj", 1.0),
     "oven": ("Props/Oven/Oven.obj", 100.0),
     "stovetop": ("Props/Stovetop/SM_Prop_Stovetop_01.obj", 1.0),
     "microwave": ("Props/Microwave/Microwave.obj", 100.0),
 }
+MODEL_UPRIGHT_ROLL = 90.0
 
 
 def material(name):
@@ -378,6 +366,7 @@ def import_static_model(key, relative_obj_path, import_scale):
     task.set_editor_property("options", import_ui)
 
     unreal.AssetToolsHelpers.get_asset_tools().import_asset_tasks([task])
+    make_imported_materials_matte(destination_path)
     imported = unreal.EditorAssetLibrary.load_asset(asset_path)
     if imported:
         return imported
@@ -388,6 +377,52 @@ def import_static_model(key, relative_obj_path, import_scale):
             return asset
 
     raise RuntimeError(f"Failed to import model: {source_path}")
+
+
+def make_imported_materials_matte(destination_path):
+    for asset_path in unreal.EditorAssetLibrary.list_assets(destination_path, recursive=False, include_folder=False):
+        asset = unreal.EditorAssetLibrary.load_asset(asset_path)
+        if isinstance(asset, unreal.MaterialInstanceConstant):
+            overrides = asset.get_editor_property("base_property_overrides")
+            set_editor_property_if_available(overrides, "override_roughness", True)
+            set_editor_property_if_available(overrides, "roughness", 0.96)
+            set_editor_property_if_available(overrides, "override_specular", True)
+            set_editor_property_if_available(overrides, "specular", 0.12)
+            set_editor_property_if_available(overrides, "override_metallic", True)
+            set_editor_property_if_available(overrides, "metallic", 0.0)
+            asset.set_editor_property("base_property_overrides", overrides)
+            unreal.EditorAssetLibrary.save_loaded_asset(asset)
+            continue
+
+        if not isinstance(asset, unreal.Material):
+            continue
+
+        roughness_expr = unreal.MaterialEditingLibrary.create_material_expression(
+            asset, unreal.MaterialExpressionConstant, -360, 260
+        )
+        roughness_expr.set_editor_property("r", 0.96)
+        unreal.MaterialEditingLibrary.connect_material_property(
+            roughness_expr, "", unreal.MaterialProperty.MP_ROUGHNESS
+        )
+
+        specular_expr = unreal.MaterialEditingLibrary.create_material_expression(
+            asset, unreal.MaterialExpressionConstant, -360, 360
+        )
+        specular_expr.set_editor_property("r", 0.12)
+        unreal.MaterialEditingLibrary.connect_material_property(
+            specular_expr, "", unreal.MaterialProperty.MP_SPECULAR
+        )
+
+        metallic_expr = unreal.MaterialEditingLibrary.create_material_expression(
+            asset, unreal.MaterialExpressionConstant, -360, 460
+        )
+        metallic_expr.set_editor_property("r", 0.0)
+        unreal.MaterialEditingLibrary.connect_material_property(
+            metallic_expr, "", unreal.MaterialProperty.MP_METALLIC
+        )
+
+        unreal.MaterialEditingLibrary.recompile_material(asset)
+        unreal.EditorAssetLibrary.save_loaded_asset(asset)
 
 
 def import_layout_models():
@@ -407,7 +442,7 @@ def place_model(models, key, label, location, yaw=0.0, scale=1.0, snap_to_floor=
     actor = unreal.EditorLevelLibrary.spawn_actor_from_class(
         unreal.StaticMeshActor,
         unreal.Vector(*location),
-        unreal.Rotator(0.0, yaw, 0.0),
+        unreal.Rotator(0.0, yaw, MODEL_UPRIGHT_ROLL),
     )
     actor.set_actor_label(label)
     actor.set_actor_scale3d(unreal.Vector(scale, scale, scale))
@@ -686,15 +721,6 @@ def add_greenhouse_work_area(models):
             "wall_core",
         )
 
-    pot_positions = (
-        (-560, 635), (-430, 690), (-300, 635),
-        (-120, 690), (0, 635), (120, 690),
-        (300, 635), (430, 690), (560, 635),
-    )
-    for index, (x, y) in enumerate(pot_positions):
-        pot_key = ("empty_pot", "soil_pot", "fertilized_pot")[index % 3]
-        place_model(models, pot_key, f"Greenhouse_Pot_{index + 1:02d}", (x, y, 75), yaw=(index % 4) * 18)
-
 
 def add_residential_area(models):
     place_model(models, "bed", "LivingArea_Bed", (-1260, -440, 0), yaw=90)
@@ -708,26 +734,25 @@ def add_desk_area(models):
 
 
 def add_storage_area(models):
-    shelf_positions = ((260, -210, 0, 0), (545, -210, 0, 0), (405, -465, 0, 180))
-    for index, (x, y, z, yaw) in enumerate(shelf_positions):
-        place_model(models, "storage_shelf", f"StorageArea_Shelf_{index + 1}", (x, y, z), yaw=yaw)
-
-    place_model(models, "soil_bag", "StorageArea_Potting_Soil_Bag_01", (170, -50, 0), yaw=-12)
-    place_model(models, "soil_bag", "StorageArea_Potting_Soil_Bag_02", (235, -35, 0), yaw=9)
-    place_model(models, "fertilizer_bag", "StorageArea_Fertilizer_Bag_01", (520, -55, 0), yaw=18)
-    place_model(models, "fertilizer_bag", "StorageArea_Fertilizer_Bag_02", (585, -35, 0), yaw=-10)
-    place_model(models, "watering_can", "StorageArea_Watering_Can", (650, -360, 0), yaw=-35)
-    place_model(models, "large_watering_can", "StorageArea_Large_Watering_Can", (705, -470, 0), yaw=20)
-    place_model(models, "trowel", "StorageArea_Garden_Trowel", (335, -360, 96), yaw=35, snap_to_floor=False)
-    place_model(models, "secateur", "StorageArea_Pruning_Shears", (445, -360, 99), yaw=-24, snap_to_floor=False)
+    shelf_positions = ((260, -210), (545, -210), (405, -465))
+    for index, (x, y) in enumerate(shelf_positions):
+        cube(f"StorageArea_Empty_Shelf_{index + 1}_Back_Post_L", (x - 92, y - 26, 84), (0.08, 0.08, 1.68), "wall_core")
+        cube(f"StorageArea_Empty_Shelf_{index + 1}_Back_Post_R", (x + 92, y - 26, 84), (0.08, 0.08, 1.68), "wall_core")
+        cube(f"StorageArea_Empty_Shelf_{index + 1}_Front_Post_L", (x - 92, y + 26, 84), (0.08, 0.08, 1.68), "wall_core")
+        cube(f"StorageArea_Empty_Shelf_{index + 1}_Front_Post_R", (x + 92, y + 26, 84), (0.08, 0.08, 1.68), "wall_core")
+        for level, z in enumerate((38, 96, 154), start=1):
+            cube(
+                f"StorageArea_Empty_Shelf_{index + 1}_Board_{level}",
+                (x, y, z),
+                (2.05, 0.64, 0.09),
+                "damage_plaster",
+            )
 
 
 def add_free_utility_area(models):
     place_model(models, "oven", "UtilityArea_Oven", (1120, -575, 0), yaw=-90)
     cube("UtilityArea_Stovetop_Counter", (1120, -395, 42), (1.25, 0.84, 0.84), "damage_plaster")
     place_model(models, "stovetop", "UtilityArea_Stovetop", (1120, -395, 92), yaw=-90, snap_to_floor=False)
-    place_model(models, "empty_pot", "UtilityArea_Empty_Pot_Reserve_01", (990, 130, 0), yaw=20)
-    place_model(models, "soil_pot", "UtilityArea_Soil_Pot_Reserve_01", (1135, 185, 0), yaw=-16)
 
 
 def add_planned_room_layout(models):
