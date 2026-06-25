@@ -16,6 +16,7 @@ GENERATED_TEXTURE_DIR = os.path.join(
 )
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OBJ_SOURCE_DIR = os.path.join(PROJECT_ROOT, "OBJ_Models")
+BRICK_WALL_SOURCE = os.path.join(PROJECT_ROOT, "SourceTextures", "Walls", "brick_wall.png")
 IMPORTED_MODEL_DIR = "/Game/ImportedModels"
 
 
@@ -165,6 +166,30 @@ def import_texture(name, generator):
     ensure_folder("/Game/Art/Textures")
     source_path = os.path.join(GENERATED_TEXTURE_DIR, f"{name}.png")
     generator(source_path)
+
+    destination_path = f"/Game/Art/Textures/{name}"
+    if unreal.EditorAssetLibrary.does_asset_exist(destination_path):
+        unreal.EditorAssetLibrary.delete_asset(destination_path)
+
+    task = unreal.AssetImportTask()
+    task.set_editor_property("filename", source_path)
+    task.set_editor_property("destination_path", "/Game/Art/Textures")
+    task.set_editor_property("destination_name", name)
+    task.set_editor_property("automated", True)
+    task.set_editor_property("replace_existing", True)
+    task.set_editor_property("save", True)
+
+    unreal.AssetToolsHelpers.get_asset_tools().import_asset_tasks([task])
+    texture = unreal.EditorAssetLibrary.load_asset(destination_path)
+    if not texture:
+        raise RuntimeError(f"Failed to import texture: {source_path}")
+    return texture
+
+
+def import_source_texture(name, source_path):
+    ensure_folder("/Game/Art/Textures")
+    if not os.path.exists(source_path):
+        raise RuntimeError(f"Missing source texture: {source_path}")
 
     destination_path = f"/Game/Art/Textures/{name}"
     if unreal.EditorAssetLibrary.does_asset_exist(destination_path):
@@ -668,35 +693,26 @@ def add_rectangular_hall():
         "Hall_Back_wall_damaged_brick",
         (-half_length - half_wall, 0, wall_height / 2),
         (wall_thickness / 100, hall_width / 100, wall_height / 100),
-        "wall_core",
+        "wall_brick",
     )
     cube(
         "Hall_Front_wall_damaged_brick",
         (half_length + half_wall, 0, wall_height / 2),
         (wall_thickness / 100, hall_width / 100, wall_height / 100),
-        "wall_core",
+        "wall_brick",
     )
     cube(
         "Hall_Left_wall_damaged_brick",
         (0, -half_width - half_wall, wall_height / 2),
         (hall_length / 100, wall_thickness / 100, wall_height / 100),
-        "wall_core",
+        "wall_brick",
     )
     cube(
         "Hall_Right_wall_damaged_brick",
         (0, half_width + half_wall, wall_height / 2),
         (hall_length / 100, wall_thickness / 100, wall_height / 100),
-        "wall_core",
+        "wall_brick",
     )
-
-    add_wall_surface("back", hall_width, "wall_back")
-    add_wall_surface("front", hall_width, "wall_front")
-    add_wall_surface("left", hall_length, "wall_left")
-    add_wall_surface("right", hall_length, "wall_right")
-
-    for wall, clusters in DAMAGE_CLUSTERS.items():
-        for cluster in clusters:
-            add_damage_cluster(wall, *cluster)
 
 
 def add_greenhouse_work_area(models):
@@ -847,6 +863,13 @@ def main():
             0.91,
             0.24,
             0.24,
+        ),
+        "wall_brick": make_textured_material(
+            "M_Hall_Brick_Wall",
+            import_source_texture("T_Hall_Brick_Wall", BRICK_WALL_SOURCE),
+            0.92,
+            10.0,
+            3.0,
         ),
         "wall_core": make_solid_material(
             "M_Hall_Wall_Dark_Core",
