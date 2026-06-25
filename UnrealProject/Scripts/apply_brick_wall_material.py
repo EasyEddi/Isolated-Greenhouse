@@ -6,12 +6,16 @@ import unreal
 PROJECT_MAP = "/Game/Maps/L_Greenhouse_MVP"
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BRICK_WALL_SOURCE = os.path.join(PROJECT_ROOT, "SourceTextures", "Walls", "brick_wall.png")
+HALL_FOOTPRINT_SCALE = 1.5
+HALL_LENGTH = int(2400 * HALL_FOOTPRINT_SCALE)
+HALL_WIDTH = int(1600 * HALL_FOOTPRINT_SCALE)
+WALL_HEIGHT = 600
 
-WALL_LABELS = {
-    "Hall_Back_wall_damaged_brick",
-    "Hall_Front_wall_damaged_brick",
-    "Hall_Left_wall_damaged_brick",
-    "Hall_Right_wall_damaged_brick",
+WALL_MATERIALS = {
+    "Hall_Back_wall_damaged_brick": "short",
+    "Hall_Front_wall_damaged_brick": "short",
+    "Hall_Left_wall_damaged_brick": "long",
+    "Hall_Right_wall_damaged_brick": "long",
 }
 
 
@@ -41,6 +45,9 @@ def import_source_texture(name, source_path):
     texture = unreal.EditorAssetLibrary.load_asset(destination_path)
     if not texture:
         raise RuntimeError(f"Failed to import texture: {source_path}")
+    texture.set_editor_property("address_x", unreal.TextureAddress.TA_MIRROR)
+    texture.set_editor_property("address_y", unreal.TextureAddress.TA_CLAMP)
+    unreal.EditorAssetLibrary.save_loaded_asset(texture)
     return texture
 
 
@@ -84,20 +91,36 @@ def make_textured_material(name, texture, roughness=0.92, u_tiling=10.0, v_tilin
 
 def main():
     texture = import_source_texture("T_Hall_Brick_Wall", BRICK_WALL_SOURCE)
-    material = make_textured_material("M_Hall_Brick_Wall", texture)
+    short_material = make_textured_material(
+        "M_Hall_Brick_Wall_Short",
+        texture,
+        u_tiling=HALL_WIDTH / WALL_HEIGHT,
+        v_tiling=1.0,
+    )
+    long_material = make_textured_material(
+        "M_Hall_Brick_Wall_Long",
+        texture,
+        u_tiling=HALL_LENGTH / WALL_HEIGHT,
+        v_tiling=1.0,
+    )
+    materials = {
+        "short": short_material,
+        "long": long_material,
+    }
 
     unreal.EditorLevelLibrary.load_level(PROJECT_MAP)
 
     applied = 0
     for actor in unreal.EditorLevelLibrary.get_all_level_actors():
-        if actor.get_actor_label() not in WALL_LABELS:
+        material_key = WALL_MATERIALS.get(actor.get_actor_label())
+        if not material_key:
             continue
 
         component = actor.get_component_by_class(unreal.StaticMeshComponent)
         if not component:
             continue
 
-        component.set_material(0, material)
+        component.set_material(0, materials[material_key])
         applied += 1
 
     actor_count = len(unreal.EditorLevelLibrary.get_all_level_actors())

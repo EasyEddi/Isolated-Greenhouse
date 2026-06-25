@@ -207,6 +207,9 @@ def import_source_texture(name, source_path):
     texture = unreal.EditorAssetLibrary.load_asset(destination_path)
     if not texture:
         raise RuntimeError(f"Failed to import texture: {source_path}")
+    set_editor_property_if_available(texture, "address_x", unreal.TextureAddress.TA_MIRROR)
+    set_editor_property_if_available(texture, "address_y", unreal.TextureAddress.TA_CLAMP)
+    unreal.EditorAssetLibrary.save_loaded_asset(texture)
     return texture
 
 
@@ -693,25 +696,25 @@ def add_rectangular_hall():
         "Hall_Back_wall_damaged_brick",
         (-half_length - half_wall, 0, wall_height / 2),
         (wall_thickness / 100, hall_width / 100, wall_height / 100),
-        "wall_brick",
+        "wall_brick_short",
     )
     cube(
         "Hall_Front_wall_damaged_brick",
         (half_length + half_wall, 0, wall_height / 2),
         (wall_thickness / 100, hall_width / 100, wall_height / 100),
-        "wall_brick",
+        "wall_brick_short",
     )
     cube(
         "Hall_Left_wall_damaged_brick",
         (0, -half_width - half_wall, wall_height / 2),
         (hall_length / 100, wall_thickness / 100, wall_height / 100),
-        "wall_brick",
+        "wall_brick_long",
     )
     cube(
         "Hall_Right_wall_damaged_brick",
         (0, half_width + half_wall, wall_height / 2),
         (hall_length / 100, wall_thickness / 100, wall_height / 100),
-        "wall_brick",
+        "wall_brick_long",
     )
 
 
@@ -864,12 +867,19 @@ def main():
             0.24,
             0.24,
         ),
-        "wall_brick": make_textured_material(
-            "M_Hall_Brick_Wall",
+        "wall_brick_short": make_textured_material(
+            "M_Hall_Brick_Wall_Short",
             import_source_texture("T_Hall_Brick_Wall", BRICK_WALL_SOURCE),
             0.92,
-            10.0,
-            3.0,
+            HALL_WIDTH / WALL_HEIGHT,
+            1.0,
+        ),
+        "wall_brick_long": make_textured_material(
+            "M_Hall_Brick_Wall_Long",
+            import_source_texture("T_Hall_Brick_Wall", BRICK_WALL_SOURCE),
+            0.92,
+            HALL_LENGTH / WALL_HEIGHT,
+            1.0,
         ),
         "wall_core": make_solid_material(
             "M_Hall_Wall_Dark_Core",
