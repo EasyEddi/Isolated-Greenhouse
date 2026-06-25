@@ -908,7 +908,7 @@ def main():
         ),
     }
 
-    models = import_layout_models()
+    models = {}
     add_rectangular_hall()
     add_planned_room_layout(models)
     add_daylight()
@@ -919,8 +919,7 @@ def main():
 
     unreal.EditorLevelLibrary.save_current_level()
     unreal.EditorAssetLibrary.save_directory("/Game/Art", only_if_is_dirty=False, recursive=True)
-    unreal.EditorAssetLibrary.save_directory(IMPORTED_MODEL_DIR, only_if_is_dirty=False, recursive=True)
-    unreal.log("Created planned first map: hall, imported static props, layout zones, daylight, spawn, and walking GameMode.")
+    unreal.log("Created planned first map: hall shell, layout zone placeholders, daylight, spawn, and walking GameMode.")
     unreal.SystemLibrary.execute_console_command(None, "QUIT_EDITOR")
 
 
