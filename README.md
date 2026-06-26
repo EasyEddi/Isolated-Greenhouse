@@ -1,4 +1,4 @@
-# The Isolated Greenhouse
+# Isolated Greenhouse
 
 A peaceful first-person plant growing simulator set inside a large isolated greenhouse hall.
 

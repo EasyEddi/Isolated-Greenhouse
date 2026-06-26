@@ -1,10 +1,10 @@
-# Startplan: The Isolated Greenhouse in Unreal Engine
+# Startplan: Isolated Greenhouse in Unreal Engine
 
 Dieser Plan ist fuer unser Capstone-Projekt gedacht. Wir benutzen Unreal Engine und arbeiten nicht klassisch als Programmierer, sondern mit Agenten/Vibe-Coding. Das heisst: Wir beschreiben sehr genau, was passieren soll, lassen Agenten oder Unreal-Tools die Umsetzung machen, testen das Ergebnis und geben dann die naechste klare Aufgabe.
 
 ## Ziel
 
-Wir bauen in zwei Wochen einen kleinen, spielbaren Unreal-Prototypen von **The Isolated Greenhouse**.
+Wir bauen in zwei Wochen einen kleinen, spielbaren Unreal-Prototypen von **Isolated Greenhouse**.
 
 Der Spieler ist allein in einer warmen, friedlichen Gewaechshaus-Halle. Er pflegt Pflanzen, schneidet Ableger, erfuellt Bestellungen am Computer, verdient Geld und kauft einfache Hilfsmittel.
 
@@ -62,7 +62,7 @@ Agenten sollen nie "mach das ganze Spiel" bekommen. Besser sind kleine Aufgaben 
 Guter Prompt:
 
 ```text
-Wir arbeiten in Unreal Engine Blueprint-only an The Isolated Greenhouse.
+Wir arbeiten in Unreal Engine Blueprint-only an Isolated Greenhouse.
 Erstelle einen Blueprint Actor BP_Plant_Monstera mit den States Small, Growing und Ready.
 Der Actor soll eine Interaktion Care() haben. Nach 3x Care wird Small zu Growing, nach 6x Care wird Growing zu Ready.
 Bitte keine C++-Dateien erstellen. Nutze Blueprints und erklaere mir danach, welche Assets/Blueprints geaendert wurden.
@@ -231,7 +231,7 @@ Beispiele:
 1. Unreal Engine 5.8 installieren.
 2. Dieses Repo lokal bei beiden klonen.
 3. Git LFS installieren und aktivieren.
-4. `TheIsolatedGreenhouse.uproject` in Unreal 5.8 oeffnen.
+4. `game/UnrealProject/TheIsolatedGreenhouse.uproject` in Unreal 5.8 oeffnen.
 5. Erste leere Map `L_Greenhouse_MVP` speichern.
 6. Branch `eddi/unreal-project-setup` erstellen.
 7. Setup committen und Pull Request oeffnen.

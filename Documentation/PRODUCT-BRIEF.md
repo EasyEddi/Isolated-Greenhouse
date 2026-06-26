@@ -1,10 +1,10 @@
 # Product Brief
 
 ## Projektname
-The Isolated Greenhouse
+Isolated Greenhouse
 
 ## Kurzbeschreibung
-The Isolated Greenhouse (TIG) ist ein PC Game, das vorraussichtlich über UnrealEngine laufen wird. In dem Spiel geht es darum, einen Online Shop für Pflanzen zu verwalten. Man kriegt immer neue Bestellungen von seinen Kunden rein, welche man dann bearbeiten muss. Man verkauft Pflanzen Ableger und später auch gesamte Pflanzen, dabei muss man auf bestimmte Vorraussetzungen achten. Jede Pflanze braucht eine gewisse Art von Dünger, jede Pflanze braucht einen bestimmten Topf, unterschiedliche Mengen an Wasser, usw. Equipment für sein die Pflanzen Zucht kann der Spieler Online bestellen. Es findet in einer abgelegenen Halle statt. In dieser Halle gibt es nur ein Gewächshaus, den Schreibtisch, auf dem ein PC für den Online shop steht und der Wohnraum des Spielers. Der Spieler ist dabei zu 100% von der Außenwelt abgeschottet und sieht nur ab und zu das Tageslicht. Werkzeuge kommen dann per Liefer Drone durch eine Luke an der Decke der Halle herein geflogen, das ist der einzige Moment im Spiel, wo der Spielertageslich erblickt.
+Isolated Greenhouse (TIG) ist ein PC Game, das vorraussichtlich über UnrealEngine laufen wird. In dem Spiel geht es darum, einen Online Shop für Pflanzen zu verwalten. Man kriegt immer neue Bestellungen von seinen Kunden rein, welche man dann bearbeiten muss. Man verkauft Pflanzen Ableger und später auch gesamte Pflanzen, dabei muss man auf bestimmte Vorraussetzungen achten. Jede Pflanze braucht eine gewisse Art von Dünger, jede Pflanze braucht einen bestimmten Topf, unterschiedliche Mengen an Wasser, usw. Equipment für sein die Pflanzen Zucht kann der Spieler Online bestellen. Es findet in einer abgelegenen Halle statt. In dieser Halle gibt es nur ein Gewächshaus, den Schreibtisch, auf dem ein PC für den Online shop steht und der Wohnraum des Spielers. Der Spieler ist dabei zu 100% von der Außenwelt abgeschottet und sieht nur ab und zu das Tageslicht. Werkzeuge kommen dann per Liefer Drone durch eine Luke an der Decke der Halle herein geflogen, das ist der einzige Moment im Spiel, wo der Spielertageslich erblickt.
 
 ## Fuer wen ist das Spiel?
 Für jeden, der gerne Computerspiele spielt und Pflanzen mag.

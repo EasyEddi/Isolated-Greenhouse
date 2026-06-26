@@ -21,7 +21,7 @@ The repository already contains `.gitattributes` rules for common Unreal asset f
 ## First Unreal Steps
 
 1. Install Unreal Engine 5.8.
-2. Open `TheIsolatedGreenhouse.uproject`.
+2. Open `game/UnrealProject/TheIsolatedGreenhouse.uproject`.
 3. Let Unreal generate any missing project files if it asks.
 4. Create a first empty level named `L_Greenhouse_MVP` inside `Content/Maps`.
 5. Save the level.
