@@ -124,13 +124,25 @@ public:
 	void ToggleInventory();
 	void SetInventoryOpen(bool bOpen);
 	bool IsInventoryOpen() const { return bInventoryOpen; }
+	void OpenOnlineShop();
+	void CloseOnlineShop();
+	bool IsShopOpen() const { return bShopOpen; }
 	void HandleSlotClicked(int32 SlotIndex);
 	void SelectHotbarSlot(int32 SlotIndex);
 	EGreenhouseInventoryItem GetSelectedHotbarItem() const;
 	bool ConsumeSelectedHotbarItem(EGreenhouseInventoryItem Item);
 	void AddItem(EGreenhouseInventoryItem Item);
+	void SetWateringCanLiters(float CurrentLiters, float MaxLiters);
 
 private:
+	enum class EGreenhouseShopPage : uint8
+	{
+		Home,
+		BuyPlants,
+		SellPlants,
+		GardenSupplies
+	};
+
 	static constexpr int32 HotbarSlotCount = 5;
 	static constexpr int32 InventoryColumnCount = 9;
 	static constexpr int32 InventoryRowCount = 3;
@@ -150,6 +162,30 @@ private:
 	TObjectPtr<UBorder> DebugFrame;
 
 	UPROPERTY()
+	TObjectPtr<UBorder> ShopFrame;
+
+	UPROPERTY()
+	TObjectPtr<UVerticalBox> ShopPanel;
+
+	UPROPERTY()
+	TObjectPtr<UVerticalBox> ShopContentPanel;
+
+	UPROPERTY()
+	TObjectPtr<UTextBlock> ShopTitleText;
+
+	UPROPERTY()
+	TObjectPtr<UTextBlock> ShopMoneyText;
+
+	UPROPERTY()
+	TObjectPtr<UTextBlock> PlayerMoneyText;
+
+	UPROPERTY()
+	TObjectPtr<UTextBlock> ShopStatusText;
+
+	UPROPERTY()
+	TObjectPtr<UTextBlock> PlantBuyQuantityText;
+
+	UPROPERTY()
 	TObjectPtr<USizeBox> CrosshairDot;
 
 	UPROPERTY()
@@ -160,6 +196,12 @@ private:
 
 	UPROPERTY()
 	TObjectPtr<UTextBlock> CursorStackText;
+
+	UPROPERTY()
+	TObjectPtr<USizeBox> WaterGaugeFillBox;
+
+	UPROPERTY()
+	TObjectPtr<UTextBlock> WaterGaugeText;
 
 	UPROPERTY()
 	TArray<TObjectPtr<UGreenhouseItemIconWidget>> SlotIcons;
@@ -179,7 +221,11 @@ private:
 	EGreenhouseInventoryItem HeldItem = EGreenhouseInventoryItem::None;
 	int32 HeldItemStack = 0;
 	int32 SelectedHotbarSlot = 0;
+	int32 Money = 120;
+	int32 PlantBuyQuantity = 1;
+	EGreenhouseShopPage CurrentShopPage = EGreenhouseShopPage::Home;
 	bool bInventoryOpen = false;
+	bool bShopOpen = false;
 	bool bBuilt = false;
 
 	void BuildInterface();
@@ -187,9 +233,19 @@ private:
 	USizeBox* CreateSlotFrame(int32 SlotIndex, const FVector2D& Size);
 	UTextBlock* CreateLabel(const FText& Text, const FLinearColor& Color, int32 FontSize, ETextJustify::Type Justification = ETextJustify::Center);
 	UButton* CreateDebugButton(const FName Name, const FText& Label, UVerticalBox* ParentPanel);
+	UButton* CreateShopButton(const FName Name, const FText& Label, UVerticalBox* ParentPanel);
 	bool HasItem(EGreenhouseInventoryItem Item) const;
+	int32 CountItem(EGreenhouseInventoryItem Item) const;
+	bool RemoveItem(EGreenhouseInventoryItem Item, int32 Count);
 	void RefreshSlots();
 	void RefreshCursorPreview();
+	void RefreshShopHeader();
+	void ShowShopHome();
+	void ShowPlantBuyPage();
+	void ShowPlantSellPage();
+	void ShowGardenSuppliesPage();
+	void SetShopStatus(const FText& StatusText, const FLinearColor& Color);
+	bool TrySpendMoney(int32 Cost);
 	FText GetStackText(EGreenhouseInventoryItem Item, int32 StackCount) const;
 	FLinearColor GetSlotColor(int32 SlotIndex) const;
 	FLinearColor GetSlotInnerColor(int32 SlotIndex) const;
@@ -216,4 +272,40 @@ private:
 
 	UFUNCTION()
 	void GiveSecateur();
+
+	UFUNCTION()
+	void HandleShopBack();
+
+	UFUNCTION()
+	void HandleOpenPlantBuyPage();
+
+	UFUNCTION()
+	void HandleOpenPlantSellPage();
+
+	UFUNCTION()
+	void HandleOpenGardenSuppliesPage();
+
+	UFUNCTION()
+	void IncreasePlantBuyQuantity();
+
+	UFUNCTION()
+	void DecreasePlantBuyQuantity();
+
+	UFUNCTION()
+	void BuyPlants();
+
+	UFUNCTION()
+	void SellLily();
+
+	UFUNCTION()
+	void BuyEmptyPot();
+
+	UFUNCTION()
+	void BuySoilBag();
+
+	UFUNCTION()
+	void BuyFertilizerBag();
+
+	UFUNCTION()
+	void BuyWateringCan();
 };

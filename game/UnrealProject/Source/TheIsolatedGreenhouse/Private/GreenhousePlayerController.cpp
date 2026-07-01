@@ -247,6 +247,10 @@ void AGreenhousePlayerController::PlayerTick(float DeltaTime)
 	Super::PlayerTick(DeltaTime);
 
 	UpdateWateringCanState(DeltaTime);
+	if (InventoryWidget)
+	{
+		InventoryWidget->SetWateringCanLiters(WateringCanLiters, MaxWateringCanLiters);
+	}
 	UpdateHeldItemActor();
 }
 
@@ -332,6 +336,7 @@ void AGreenhousePlayerController::SetupInputComponent()
 	InputComponent->BindKey(EKeys::Three, IE_Pressed, this, &AGreenhousePlayerController::SelectHotbarSlotThree);
 	InputComponent->BindKey(EKeys::Four, IE_Pressed, this, &AGreenhousePlayerController::SelectHotbarSlotFour);
 	InputComponent->BindKey(EKeys::Five, IE_Pressed, this, &AGreenhousePlayerController::SelectHotbarSlotFive);
+	InputComponent->BindKey(EKeys::RightMouseButton, IE_Pressed, this, &AGreenhousePlayerController::HandleComputerShopPressed);
 	InputComponent->BindKey(EKeys::LeftMouseButton, IE_Pressed, this, &AGreenhousePlayerController::HandleWateringCanPressed);
 	InputComponent->BindKey(EKeys::LeftMouseButton, IE_Released, this, &AGreenhousePlayerController::HandleWateringCanReleased);
 	InputComponent->BindKey(EKeys::LeftShift, IE_Pressed, this, &AGreenhousePlayerController::StartSprint);
@@ -353,6 +358,13 @@ void AGreenhousePlayerController::ToggleInventory()
 
 void AGreenhousePlayerController::HandleInteractOrInventory()
 {
+	if (InventoryWidget && InventoryWidget->IsShopOpen())
+	{
+		InventoryWidget->CloseOnlineShop();
+		ApplyInventoryInputMode(false);
+		return;
+	}
+
 	if (InventoryWidget && !InventoryWidget->IsInventoryOpen() && TryPlantSelectedLily())
 	{
 		return;
@@ -663,9 +675,38 @@ bool AGreenhousePlayerController::IsPotSlotOccupied(int32 SlotIndex) const
 	return OccupiedPotSlotIndices.Contains(SlotIndex);
 }
 
+void AGreenhousePlayerController::HandleComputerShopPressed()
+{
+	if (!InventoryWidget)
+	{
+		return;
+	}
+
+	if (InventoryWidget->IsShopOpen())
+	{
+		InventoryWidget->CloseOnlineShop();
+		ApplyInventoryInputMode(false);
+		return;
+	}
+
+	if (InventoryWidget->IsInventoryOpen())
+	{
+		return;
+	}
+
+	FHitResult InteractionHit;
+	if (!TraceForInteraction(InteractionHit) || !InteractionHit.bBlockingHit || !IsComputerScreenHit(InteractionHit))
+	{
+		return;
+	}
+
+	InventoryWidget->OpenOnlineShop();
+	ApplyInventoryInputMode(true);
+}
+
 void AGreenhousePlayerController::HandleWateringCanFillPressed()
 {
-	if (InventoryWidget && InventoryWidget->IsInventoryOpen())
+	if (InventoryWidget && (InventoryWidget->IsInventoryOpen() || InventoryWidget->IsShopOpen()))
 	{
 		return;
 	}
@@ -697,7 +738,7 @@ bool AGreenhousePlayerController::TryStartFillingSelectedWateringCan()
 
 void AGreenhousePlayerController::HandleWateringCanPressed()
 {
-	if (InventoryWidget && InventoryWidget->IsInventoryOpen())
+	if (InventoryWidget && (InventoryWidget->IsInventoryOpen() || InventoryWidget->IsShopOpen()))
 	{
 		return;
 	}
@@ -922,6 +963,46 @@ bool AGreenhousePlayerController::IsFaucetHit(const FHitResult& Hit) const
 		|| ComponentName.Contains(TEXT("Faucet"), ESearchCase::IgnoreCase)
 		|| IsGardenFaucetMesh(Mesh)
 		|| MeshPath.Contains(TEXT("WaterTap"), ESearchCase::IgnoreCase);
+}
+
+bool AGreenhousePlayerController::IsComputerScreenHit(const FHitResult& Hit) const
+{
+	const AActor* HitActor = Hit.GetActor();
+	const UStaticMeshComponent* MeshComponent = Cast<UStaticMeshComponent>(Hit.GetComponent());
+	const UStaticMesh* Mesh = MeshComponent ? MeshComponent->GetStaticMesh() : nullptr;
+
+	const FString ActorName = HitActor ? HitActor->GetName() : FString();
+	const FString ComponentName = MeshComponent ? MeshComponent->GetName() : FString();
+	const FString MeshPath = Mesh ? Mesh->GetPathName() : FString();
+	if (ActorName.Contains(TEXT("Monitor"), ESearchCase::IgnoreCase)
+		|| ActorName.Contains(TEXT("Computer"), ESearchCase::IgnoreCase)
+		|| ActorName.Contains(TEXT("Screen"), ESearchCase::IgnoreCase)
+		|| ActorName.Contains(TEXT("Office_PC"), ESearchCase::IgnoreCase)
+		|| ComponentName.Contains(TEXT("Monitor"), ESearchCase::IgnoreCase)
+		|| ComponentName.Contains(TEXT("Screen"), ESearchCase::IgnoreCase)
+		|| MeshPath.Contains(TEXT("desk+setup"), ESearchCase::IgnoreCase)
+		|| MeshPath.Contains(TEXT("Monitor"), ESearchCase::IgnoreCase)
+		|| MeshPath.Contains(TEXT("Office_PC"), ESearchCase::IgnoreCase))
+	{
+		return true;
+	}
+
+	if (MeshComponent)
+	{
+		const int32 MaterialCount = MeshComponent->GetNumMaterials();
+		for (int32 MaterialIndex = 0; MaterialIndex < MaterialCount; ++MaterialIndex)
+		{
+			const UMaterialInterface* Material = MeshComponent->GetMaterial(MaterialIndex);
+			const FString MaterialPath = Material ? Material->GetPathName() : FString();
+			if (MaterialPath.Contains(TEXT("Monitor_Dark_Glass"), ESearchCase::IgnoreCase)
+				|| MaterialPath.Contains(TEXT("Old_Office_PC"), ESearchCase::IgnoreCase))
+			{
+				return true;
+			}
+		}
+	}
+
+	return false;
 }
 
 void AGreenhousePlayerController::StartFillingWateringCan(const FHitResult& FaucetHit)

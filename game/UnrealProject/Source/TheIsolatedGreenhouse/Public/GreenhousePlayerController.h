@@ -76,6 +76,7 @@ private:
 	bool TryPlantSelectedLily();
 	bool FindItemPlacementSlot(EGreenhouseInventoryItem SelectedItem, const FHitResult& InteractionHit, FTransform& OutPlacementTransform, int32& OutSlotIndex) const;
 	bool IsPotSlotOccupied(int32 SlotIndex) const;
+	void HandleComputerShopPressed();
 	void HandleWateringCanFillPressed();
 	bool TryStartFillingSelectedWateringCan();
 	void HandleWateringCanPressed();
@@ -92,6 +93,7 @@ private:
 	bool HasSelectedWateringCan() const;
 	bool TraceForInteraction(FHitResult& OutHit) const;
 	bool IsFaucetHit(const FHitResult& Hit) const;
+	bool IsComputerScreenHit(const FHitResult& Hit) const;
 	void StartFillingWateringCan(const FHitResult& FaucetHit);
 	void FinishFillingWateringCan();
 	void StartPouringWater(const FHitResult& InteractionHit);
