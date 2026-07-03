@@ -5,6 +5,32 @@ on:
     branches:
       - main
   workflow_dispatch:
+    inputs:
+      build_windows:
+        description: Build and attach the Windows release too. Requires an online self-hosted Windows runner.
+        type: boolean
+        default: false
+      version_bump:
+        description: Version bump for this release. Major is only for explicit owner-approved milestones.
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+          - none
+        default: patch
+      release_version:
+        description: Optional exact version override, for example 0.0.0.
+        type: string
+        required: false
+      release_description:
+        description: Optional Description text for the GitHub release.
+        type: string
+        required: false
+      release_changelog:
+        description: Optional Changelog text. Separate items with semicolons.
+        type: string
+        required: false
 
 permissions:
   contents: write
@@ -15,13 +41,156 @@ env:
   MAC_UE_ROOT: /Users/Shared/Epic Games/UE_5.8
 
 jobs:
+  release-metadata:
+    name: Prepare release metadata
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.metadata.outputs.version }}
+      tag: ${{ steps.metadata.outputs.tag }}
+      title: ${{ steps.metadata.outputs.title }}
+      body: ${{ steps.metadata.outputs.body }}
+      mac_asset: ${{ steps.metadata.outputs.mac_asset }}
+      windows_asset: ${{ steps.metadata.outputs.windows_asset }}
+
+    steps:
+      - name: Checkout tags
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Prepare release metadata
+        id: metadata
+        shell: bash
+        env:
+          INPUT_BUMP: ${{ github.event.inputs.version_bump }}
+          INPUT_VERSION: ${{ github.event.inputs.release_version }}
+          INPUT_DESCRIPTION: ${{ github.event.inputs.release_description }}
+          INPUT_CHANGELOG: ${{ github.event.inputs.release_changelog }}
+          DEFAULT_BUMP: ${{ vars.RELEASE_VERSION_BUMP }}
+          GITHUB_ACTOR: ${{ github.actor }}
+        run: |
+          set -euo pipefail
+
+          latest_tag="$(git tag -l 'mvp-alpha-*' --sort=-v:refname | head -n 1 || true)"
+          latest_version="0.0.0"
+          if [ -n "$latest_tag" ]; then
+            latest_version="${latest_tag#mvp-alpha-}"
+          fi
+
+          bump="${INPUT_BUMP:-${DEFAULT_BUMP:-patch}}"
+          version="${INPUT_VERSION:-}"
+
+          if [ -z "$version" ]; then
+            IFS='.' read -r major minor patch <<< "$latest_version"
+            case "$bump" in
+              none)
+                ;;
+              patch)
+                patch=$((patch + 1))
+                ;;
+              minor)
+                minor=$((minor + 1))
+                patch=0
+                ;;
+              major)
+                major=$((major + 1))
+                minor=0
+                patch=0
+                ;;
+              *)
+                echo "Unknown version bump: $bump" >&2
+                exit 1
+                ;;
+            esac
+
+            if [ -z "$latest_tag" ]; then
+              version="0.0.0"
+            else
+              version="$major.$minor.$patch"
+            fi
+          fi
+
+          if ! [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Release version must look like 0.0.0, got: $version" >&2
+            exit 1
+          fi
+
+          tag="mvp-alpha-$version"
+          title="MVP Alpha $version"
+          mac_asset="IsolatedGreenhouse_${version}_macOS.zip"
+          windows_asset="IsolatedGreenhouse_${version}_Windows.zip"
+
+          description="${INPUT_DESCRIPTION:-Current MVP Alpha build with the latest stable changes from main.}"
+
+          changelog_file="$RUNNER_TEMP/changelog.md"
+          : > "$changelog_file"
+          range="HEAD"
+          if [ -n "$latest_tag" ]; then
+            range="$latest_tag..HEAD"
+          fi
+
+          if [ -n "${INPUT_CHANGELOG:-}" ]; then
+            IFS=';' read -ra changelog_items <<< "$INPUT_CHANGELOG"
+            for item in "${changelog_items[@]}"; do
+              item="$(echo "$item" | xargs)"
+              if [ -n "$item" ]; then
+                echo "- $item" >> "$changelog_file"
+              fi
+            done
+          else
+            git log --no-merges --pretty=format:'- %s' "$range" > "$changelog_file" || true
+          fi
+
+          if [ ! -s "$changelog_file" ]; then
+            echo "- Updated the release build." > "$changelog_file"
+          fi
+
+          release_contributors=()
+          if git log --format='%an <%ae>' "$range" | grep -Eqi 'EasyEddi|Aidan-Scott|eddi@'; then
+            release_contributors+=("@EasyEddi")
+          fi
+          if git log --format='%an <%ae>' "$range" | grep -Eqi 'Tarek|tarek'; then
+            release_contributors+=("@Tarekke")
+          fi
+          if [ ${#release_contributors[@]} -eq 0 ] && [ -n "${GITHUB_ACTOR:-}" ]; then
+            release_contributors+=("@$GITHUB_ACTOR")
+          fi
+
+          if [ ${#release_contributors[@]} -gt 0 ] && ! grep -Eq '@[A-Za-z0-9-]+' "$changelog_file"; then
+            contributors_line="${release_contributors[0]}"
+            for ((i = 1; i < ${#release_contributors[@]}; i++)); do
+              contributors_line="$contributors_line, ${release_contributors[$i]}"
+            done
+            echo "- Release contributors: $contributors_line." >> "$changelog_file"
+          fi
+
+          {
+            echo "version=$version"
+            echo "tag=$tag"
+            echo "title=$title"
+            echo "mac_asset=$mac_asset"
+            echo "windows_asset=$windows_asset"
+            echo "body<<RELEASE_BODY"
+            echo "## Description"
+            echo
+            echo "$description"
+            echo
+            echo "## Changelog"
+            echo
+            cat "$changelog_file"
+            echo "RELEASE_BODY"
+          } >> "$GITHUB_OUTPUT"
+
   build-windows:
     name: Build Windows release
+    needs:
+      - release-metadata
     runs-on: [self-hosted, Windows]
+    if: ${{ vars.BUILD_WINDOWS_RELEASE == 'true' || (github.event_name == 'workflow_dispatch' && inputs.build_windows) }}
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           lfs: true
 
@@ -63,25 +232,29 @@ jobs:
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path "$env:GITHUB_WORKSPACE\release" | Out-Null
+          $ArtifactName = "${{ needs.release-metadata.outputs.windows_asset }}"
           Compress-Archive `
             -Path "$env:GITHUB_WORKSPACE\dist\windows\*" `
-            -DestinationPath "$env:GITHUB_WORKSPACE\release\IsolatedGreenhouse-Windows.zip" `
+            -DestinationPath "$env:GITHUB_WORKSPACE\release\$ArtifactName" `
             -Force
 
       - name: Upload Windows release artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: IsolatedGreenhouse-Windows
-          path: release/IsolatedGreenhouse-Windows.zip
+          path: release/${{ needs.release-metadata.outputs.windows_asset }}
           if-no-files-found: error
 
   build-macos:
     name: Build macOS release
+    needs:
+      - release-metadata
     runs-on: [self-hosted, macOS]
+    timeout-minutes: 180
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           lfs: true
 
@@ -101,16 +274,20 @@ jobs:
       - name: Build packaged macOS game
         shell: bash
         run: |
+          set -euo pipefail
+
           PROJECT="$GITHUB_WORKSPACE/${{ env.PROJECT_PATH }}"
           ARCHIVE="$GITHUB_WORKSPACE/dist/mac"
           RUN_UAT="${{ env.MAC_UE_ROOT }}/Engine/Build/BatchFiles/RunUAT.sh"
 
-          "$RUN_UAT" BuildCookRun \
+          caffeinate -dimsu "$RUN_UAT" BuildCookRun \
             -project="$PROJECT" \
             -noP4 \
             -platform=Mac \
             -clientconfig=Shipping \
             -serverconfig=Shipping \
+            -unattended \
+            -utf8output \
             -cook \
             -allmaps \
             -build \
@@ -119,40 +296,109 @@ jobs:
             -archive \
             -archivedirectory="$ARCHIVE"
 
+      - name: Collect macOS build logs
+        if: always()
+        shell: bash
+        run: |
+          set +e
+
+          LOG_DIR="$GITHUB_WORKSPACE/release-logs/macos"
+          mkdir -p "$LOG_DIR"
+
+          if [ -d "$HOME/Library/Logs/Unreal Engine" ]; then
+            cp -R "$HOME/Library/Logs/Unreal Engine" "$LOG_DIR/unreal-engine-logs"
+          fi
+
+          if [ -d "$HOME/Library/Application Support/Epic/UnrealBuildTool" ]; then
+            cp -R "$HOME/Library/Application Support/Epic/UnrealBuildTool" "$LOG_DIR/unreal-build-tool"
+          fi
+
+          if [ -d "$GITHUB_WORKSPACE/game/UnrealProject/Saved/Logs" ]; then
+            cp -R "$GITHUB_WORKSPACE/game/UnrealProject/Saved/Logs" "$LOG_DIR/project-saved-logs"
+          fi
+
+          if [ -d "$RUNNER_TEMP" ]; then
+            cp -R "$RUNNER_TEMP" "$LOG_DIR/runner-temp"
+          fi
+
+          if [ -d "$RUNNER_TOOL_CACHE" ]; then
+            mkdir -p "$LOG_DIR/runner-info"
+            du -sh "$RUNNER_TOOL_CACHE" > "$LOG_DIR/runner-info/tool-cache-size.txt" 2>&1
+          fi
+
+          df -h > "$LOG_DIR/disk-space.txt" 2>&1
+          vm_stat > "$LOG_DIR/vm-stat.txt" 2>&1
+          ps aux > "$LOG_DIR/processes.txt" 2>&1
+
+      - name: Upload macOS build logs
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: IsolatedGreenhouse-macOS-logs
+          path: release-logs/macos
+          if-no-files-found: ignore
+
       - name: Zip macOS release
         shell: bash
         run: |
           mkdir -p "$GITHUB_WORKSPACE/release"
           cd "$GITHUB_WORKSPACE/dist"
-          ditto -c -k --sequesterRsrc --keepParent mac "$GITHUB_WORKSPACE/release/IsolatedGreenhouse-macOS.zip"
+          ditto -c -k --sequesterRsrc --keepParent mac "$GITHUB_WORKSPACE/release/${{ needs.release-metadata.outputs.mac_asset }}"
 
       - name: Upload macOS release artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: IsolatedGreenhouse-macOS
-          path: release/IsolatedGreenhouse-macOS.zip
+          path: release/${{ needs.release-metadata.outputs.mac_asset }}
           if-no-files-found: error
 
-  publish-release:
-    name: Publish GitHub release
+  publish-macos-release:
+    name: Publish macOS GitHub release
     needs:
-      - build-windows
+      - release-metadata
       - build-macos
     runs-on: ubuntu-latest
 
     steps:
-      - name: Download release artifacts
-        uses: actions/download-artifact@v4
+      - name: Download macOS release artifact
+        uses: actions/download-artifact@v8
         with:
-          path: release-artifacts
+          name: IsolatedGreenhouse-macOS
+          path: release-artifacts/IsolatedGreenhouse-macOS
 
       - name: Create GitHub release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
-          tag_name: build-${{ github.run_number }}
-          name: Isolated Greenhouse Build ${{ github.run_number }}
+          tag_name: ${{ needs.release-metadata.outputs.tag }}
+          name: ${{ needs.release-metadata.outputs.title }}
           target_commitish: ${{ github.sha }}
-          generate_release_notes: true
+          body: ${{ needs.release-metadata.outputs.body }}
+          fail_on_unmatched_files: true
           files: |
-            release-artifacts/IsolatedGreenhouse-Windows/IsolatedGreenhouse-Windows.zip
-            release-artifacts/IsolatedGreenhouse-macOS/IsolatedGreenhouse-macOS.zip
+            release-artifacts/IsolatedGreenhouse-macOS/${{ needs.release-metadata.outputs.mac_asset }}
+
+  attach-windows-release:
+    name: Attach Windows release asset
+    needs:
+      - release-metadata
+      - build-windows
+      - publish-macos-release
+    if: ${{ always() && needs.build-windows.result == 'success' && needs.publish-macos-release.result == 'success' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download Windows release artifact
+        uses: actions/download-artifact@v8
+        with:
+          name: IsolatedGreenhouse-Windows
+          path: release-artifacts/IsolatedGreenhouse-Windows
+
+      - name: Upload Windows asset to GitHub release
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: ${{ needs.release-metadata.outputs.tag }}
+          name: ${{ needs.release-metadata.outputs.title }}
+          target_commitish: ${{ github.sha }}
+          fail_on_unmatched_files: true
+          files: |
+            release-artifacts/IsolatedGreenhouse-Windows/${{ needs.release-metadata.outputs.windows_asset }}

@@ -82,11 +82,17 @@ struct FStorageShelfPlacementSlotDefinition
 };
 
 const FStorageShelfPlacementSlotDefinition StorageShelfSoilBagSlotDefinitions[] = {
-	{ FVector(-82.0f, 3.0f, 96.0f), FVector(-82.0f, 9.0f, 42.0f) }
+	{ FVector(-126.0f, 2.0f, 41.5f), FVector(-126.0f, 41.0f, 44.5f) },
+	{ FVector(-42.0f, 2.0f, 41.5f), FVector(-42.0f, 41.0f, 44.5f) },
+	{ FVector(42.0f, 2.0f, 41.5f), FVector(42.0f, 41.0f, 44.5f) },
+	{ FVector(126.0f, 2.0f, 41.5f), FVector(126.0f, 41.0f, 44.5f) }
 };
 
 const FStorageShelfPlacementSlotDefinition StorageShelfFertilizerBagSlotDefinitions[] = {
-	{ FVector(82.0f, 3.0f, 96.0f), FVector(82.0f, 9.0f, 42.0f) }
+	{ FVector(-126.0f, 2.0f, 151.5f), FVector(-126.0f, 41.0f, 154.5f) },
+	{ FVector(-42.0f, 2.0f, 151.5f), FVector(-42.0f, 41.0f, 154.5f) },
+	{ FVector(42.0f, 2.0f, 151.5f), FVector(42.0f, 41.0f, 154.5f) },
+	{ FVector(126.0f, 2.0f, 151.5f), FVector(126.0f, 41.0f, 154.5f) }
 };
 
 const FStorageShelfPlacementSlotDefinition StorageShelfToolSlotDefinitions[] = {
@@ -95,6 +101,7 @@ const FStorageShelfPlacementSlotDefinition StorageShelfToolSlotDefinitions[] = {
 };
 
 constexpr float PotPlacementScale = 0.32f;
+constexpr float StorageShelfPotPlacementScale = 0.22f;
 constexpr float PotPlacementSnapRadiusCm = 58.0f;
 constexpr float PotPlacementMaxVerticalOffsetCm = 45.0f;
 constexpr float PotPlacementBenchFrontOffsetCm = 6.0f;
@@ -106,10 +113,12 @@ constexpr int32 StorageShelfFertilizerBagSlotIndexOffset = 220;
 constexpr int32 StorageShelfToolSlotIndexOffset = 240;
 constexpr float StorageShelfPotPlacementSnapRadiusCm = 42.0f;
 constexpr float StorageShelfPotPlacementMaxVerticalOffsetCm = 36.0f;
-constexpr float StorageShelfBagPlacementSnapRadiusCm = 96.0f;
-constexpr float StorageShelfBagPlacementMaxVerticalOffsetCm = 82.0f;
+constexpr float StorageShelfBagPlacementSnapRadiusCm = 54.0f;
+constexpr float StorageShelfBagPlacementMaxVerticalOffsetCm = 42.0f;
 constexpr float StorageShelfToolPlacementSnapRadiusCm = 46.0f;
 constexpr float StorageShelfToolPlacementMaxVerticalOffsetCm = 34.0f;
+constexpr uint32 GreenhousePlacementSlotKeyBase = 1;
+constexpr uint32 StorageShelfPlacementSlotKeySalt = 0x5A000000;
 
 bool IsGreenhouseMesh(const UStaticMesh* Mesh)
 {
@@ -132,6 +141,38 @@ bool IsStorageShelfMesh(const UStaticMesh* Mesh)
 	return MeshPath.Contains(TEXT("Storage_Shelf"), ESearchCase::IgnoreCase)
 		|| MeshPath.Contains(TEXT("storage_shelf"), ESearchCase::IgnoreCase)
 		|| MeshPath.Contains(TEXT("storge_shelf"), ESearchCase::IgnoreCase);
+}
+
+bool ContainsStorageShelfName(const FString& Name)
+{
+	return Name.Contains(TEXT("Storage_Shelf"), ESearchCase::IgnoreCase)
+		|| Name.Contains(TEXT("storage_shelf"), ESearchCase::IgnoreCase)
+		|| Name.Contains(TEXT("storge_shelf"), ESearchCase::IgnoreCase)
+		|| Name.Contains(TEXT("StorageShelf"), ESearchCase::IgnoreCase);
+}
+
+bool IsStorageShelfHit(const FHitResult& Hit, const UStaticMesh* Mesh)
+{
+	if (IsStorageShelfMesh(Mesh))
+	{
+		return true;
+	}
+
+	const AActor* HitActor = Hit.GetActor();
+	const UActorComponent* HitComponent = Hit.GetComponent();
+	return (HitActor && ContainsStorageShelfName(HitActor->GetName()))
+		|| (HitComponent && ContainsStorageShelfName(HitComponent->GetName()));
+}
+
+uint32 MakeGreenhousePlacementSlotKey(int32 SlotIndex)
+{
+	return GreenhousePlacementSlotKeyBase + static_cast<uint32>(SlotIndex);
+}
+
+uint32 MakeStorageShelfPlacementSlotKey(const AActor* ShelfActor, int32 SlotIndex)
+{
+	const uint32 ActorHash = ShelfActor ? GetTypeHash(ShelfActor) : 0u;
+	return HashCombine(StorageShelfPlacementSlotKeySalt ^ ActorHash, static_cast<uint32>(SlotIndex));
 }
 
 UStaticMesh* LoadEmptyPotPlacementMesh()
@@ -194,7 +235,7 @@ FRotator GetStorageShelfPlacementRotation(EGreenhouseInventoryItem Item, float S
 	{
 	case EGreenhouseInventoryItem::SoilBag:
 	case EGreenhouseInventoryItem::FertilizerBag:
-		return FRotator(0.0f, ShelfYawDegrees + 180.0f, 0.0f);
+		return FRotator(0.0f, ShelfYawDegrees, -90.0f);
 	case EGreenhouseInventoryItem::Trowel:
 		return FRotator(0.0f, ShelfYawDegrees + 90.0f, -72.0f);
 	case EGreenhouseInventoryItem::Secateur:
@@ -393,8 +434,8 @@ bool AGreenhousePlayerController::TryPlaceSelectedItem()
 	}
 
 	FTransform PlacementTransform;
-	int32 SlotIndex = INDEX_NONE;
-	if (!FindItemPlacementSlot(SelectedItem, InteractionHit, PlacementTransform, SlotIndex))
+	uint32 SlotKey = 0;
+	if (!FindItemPlacementSlot(SelectedItem, InteractionHit, PlacementTransform, SlotKey))
 	{
 		return false;
 	}
@@ -425,7 +466,7 @@ bool AGreenhousePlayerController::TryPlaceSelectedItem()
 	}
 
 	PlacedPotActors.Add(PlacedActor);
-	OccupiedPotSlotIndices.Add(SlotIndex);
+	OccupiedPlacementSlotKeys.Add(SlotKey);
 	UpdateHeldItemActor();
 	return true;
 }
@@ -478,7 +519,7 @@ bool AGreenhousePlayerController::TryPlantSelectedLily()
 	return bPlanted;
 }
 
-bool AGreenhousePlayerController::FindItemPlacementSlot(EGreenhouseInventoryItem SelectedItem, const FHitResult& InteractionHit, FTransform& OutPlacementTransform, int32& OutSlotIndex) const
+bool AGreenhousePlayerController::FindItemPlacementSlot(EGreenhouseInventoryItem SelectedItem, const FHitResult& InteractionHit, FTransform& OutPlacementTransform, uint32& OutSlotKey) const
 {
 	const UStaticMeshComponent* HitMeshComponent = Cast<UStaticMeshComponent>(InteractionHit.GetComponent());
 	if (!HitMeshComponent)
@@ -504,7 +545,7 @@ bool AGreenhousePlayerController::FindItemPlacementSlot(EGreenhouseInventoryItem
 		FVector ClosestSlotLocation = FVector::ZeroVector;
 		for (int32 SlotIndex = 0; SlotIndex < UE_ARRAY_COUNT(GreenhousePotSlotLocalCenters); ++SlotIndex)
 		{
-			if (IsPotSlotOccupied(SlotIndex))
+			if (IsPlacementSlotOccupied(MakeGreenhousePlacementSlotKey(SlotIndex)))
 			{
 				continue;
 			}
@@ -541,12 +582,13 @@ bool AGreenhousePlayerController::FindItemPlacementSlot(EGreenhouseInventoryItem
 			SlotRotation,
 			ClosestSlotLocation + BenchFrontDirection * BenchFrontOffset + FVector(0.0f, 0.0f, PotPlacementSurfaceLiftCm),
 			FVector(PotPlacementScale));
-		OutSlotIndex = ClosestSlotIndex;
+		OutSlotKey = MakeGreenhousePlacementSlotKey(ClosestSlotIndex);
 		return true;
 	}
 
-	if (IsStorageShelfMesh(HitMesh))
+	if (IsStorageShelfHit(InteractionHit, HitMesh))
 	{
+		const AActor* ShelfActor = InteractionHit.GetActor();
 		if (SelectedItem == EGreenhouseInventoryItem::EmptyPot)
 		{
 			const float MaxDistanceSq = FMath::Square(StorageShelfPotPlacementSnapRadiusCm);
@@ -556,8 +598,8 @@ bool AGreenhousePlayerController::FindItemPlacementSlot(EGreenhouseInventoryItem
 			FVector ClosestSlotLocation = FVector::ZeroVector;
 			for (int32 SlotIndex = 0; SlotIndex < UE_ARRAY_COUNT(StorageShelfPotSlotLocalCenters); ++SlotIndex)
 			{
-				const int32 OccupancyIndex = StorageShelfPotSlotIndexOffset + SlotIndex;
-				if (IsPotSlotOccupied(OccupancyIndex))
+				const int32 SlotKeyIndex = StorageShelfPotSlotIndexOffset + SlotIndex;
+				if (IsPlacementSlotOccupied(MakeStorageShelfPlacementSlotKey(ShelfActor, SlotKeyIndex)))
 				{
 					continue;
 				}
@@ -587,8 +629,8 @@ bool AGreenhousePlayerController::FindItemPlacementSlot(EGreenhouseInventoryItem
 			OutPlacementTransform = FTransform(
 				SlotRotation,
 				ClosestSlotLocation + FVector(0.0f, 0.0f, PotPlacementSurfaceLiftCm),
-				FVector(PotPlacementScale));
-			OutSlotIndex = StorageShelfPotSlotIndexOffset + ClosestShelfSlotIndex;
+				FVector(StorageShelfPotPlacementScale));
+			OutSlotKey = MakeStorageShelfPlacementSlotKey(ShelfActor, StorageShelfPotSlotIndexOffset + ClosestShelfSlotIndex);
 			return true;
 		}
 
@@ -631,8 +673,8 @@ bool AGreenhousePlayerController::FindItemPlacementSlot(EGreenhouseInventoryItem
 		FVector ClosestPlacementLocation = FVector::ZeroVector;
 		for (int32 SlotIndex = 0; SlotIndex < SlotCount; ++SlotIndex)
 		{
-			const int32 OccupancyIndex = SlotIndexOffset + SlotIndex;
-			if (IsPotSlotOccupied(OccupancyIndex))
+			const int32 SlotKeyIndex = SlotIndexOffset + SlotIndex;
+			if (IsPlacementSlotOccupied(MakeStorageShelfPlacementSlotKey(ShelfActor, SlotKeyIndex)))
 			{
 				continue;
 			}
@@ -663,16 +705,16 @@ bool AGreenhousePlayerController::FindItemPlacementSlot(EGreenhouseInventoryItem
 			SlotRotation,
 			ClosestPlacementLocation + FVector(0.0f, 0.0f, PotPlacementSurfaceLiftCm),
 			FVector(GetPlacementScaleForItem(SelectedItem)));
-		OutSlotIndex = SlotIndexOffset + ClosestShelfSlotIndex;
+		OutSlotKey = MakeStorageShelfPlacementSlotKey(ShelfActor, SlotIndexOffset + ClosestShelfSlotIndex);
 		return true;
 	}
 
 	return false;
 }
 
-bool AGreenhousePlayerController::IsPotSlotOccupied(int32 SlotIndex) const
+bool AGreenhousePlayerController::IsPlacementSlotOccupied(uint32 SlotKey) const
 {
-	return OccupiedPotSlotIndices.Contains(SlotIndex);
+	return OccupiedPlacementSlotKeys.Contains(SlotKey);
 }
 
 void AGreenhousePlayerController::HandleComputerShopPressed()

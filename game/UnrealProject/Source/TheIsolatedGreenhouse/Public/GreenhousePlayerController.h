@@ -53,7 +53,7 @@ private:
 	UPROPERTY()
 	TArray<TObjectPtr<AStaticMeshActor>> PlacedPotActors;
 
-	TArray<int32> OccupiedPotSlotIndices;
+	TSet<uint32> OccupiedPlacementSlotKeys;
 
 	EGreenhouseInventoryItem LastDisplayedHeldItem = EGreenhouseInventoryItem::None;
 	float DefaultWalkSpeed = 0.0f;
@@ -74,8 +74,8 @@ private:
 	void HandleInteractOrInventory();
 	bool TryPlaceSelectedItem();
 	bool TryPlantSelectedLily();
-	bool FindItemPlacementSlot(EGreenhouseInventoryItem SelectedItem, const FHitResult& InteractionHit, FTransform& OutPlacementTransform, int32& OutSlotIndex) const;
-	bool IsPotSlotOccupied(int32 SlotIndex) const;
+	bool FindItemPlacementSlot(EGreenhouseInventoryItem SelectedItem, const FHitResult& InteractionHit, FTransform& OutPlacementTransform, uint32& OutSlotKey) const;
+	bool IsPlacementSlotOccupied(uint32 SlotKey) const;
 	void HandleComputerShopPressed();
 	void HandleWateringCanFillPressed();
 	bool TryStartFillingSelectedWateringCan();
