@@ -5,7 +5,7 @@ Dieses Dokument beschreibt den aktuellen Arbeitsplan fuer den Unreal-Prototypen 
 ## Aktueller Stand
 
 - Unreal Engine 5.8 ist die gemeinsame Engine-Version.
-- Das Projekt liegt unter `game/UnrealProject/TheIsolatedGreenhouse.uproject`.
+- Das Projekt liegt unter `game/UnrealProject/IsolatedGreenhouse.uproject`.
 - Die Standard-Map ist `Content/Maps/L_Greenhouse_MVP`.
 - Das Projekt nutzt C++ fuer Grundsysteme und Unreal-Assets/Blueprints fuer Gameplay-nahe Inhalte.
 - First-Person-Bewegung, Inventar, Hotbar, Debug-Give-Buttons und ein erster Lily-Planting-Loop existieren.
@@ -77,7 +77,7 @@ Nachher liste Dateien und Tests auf.
 Arbeite nur an C++/UI-Code im Unreal-Projekt.
 Fasse keine .umap oder .uasset Dateien an.
 Ziel: [konkrete Aufgabe].
-Baue danach TheIsolatedGreenhouseEditor und nenne das Ergebnis.
+Baue danach IsolatedGreenhouseEditor und nenne das Ergebnis.
 ```
 
 ## Definition of Done

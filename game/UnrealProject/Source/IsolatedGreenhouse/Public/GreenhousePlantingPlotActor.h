@@ -8,7 +8,7 @@ class UStaticMeshComponent;
 class USceneComponent;
 
 UCLASS()
-class THEISOLATEDGREENHOUSE_API AGreenhousePlantingPlotActor : public AActor
+class ISOLATEDGREENHOUSE_API AGreenhousePlantingPlotActor : public AActor
 {
 	GENERATED_BODY()
 

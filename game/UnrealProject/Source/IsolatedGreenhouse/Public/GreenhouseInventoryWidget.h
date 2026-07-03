@@ -33,7 +33,7 @@ enum class EGreenhouseInventoryItem : uint8
 };
 
 UCLASS()
-class THEISOLATEDGREENHOUSE_API AGreenhouseItemPreviewActor : public AActor
+class ISOLATEDGREENHOUSE_API AGreenhouseItemPreviewActor : public AActor
 {
 	GENERATED_BODY()
 
@@ -77,7 +77,7 @@ private:
 };
 
 UCLASS()
-class THEISOLATEDGREENHOUSE_API UGreenhouseItemIconWidget : public UViewport
+class ISOLATEDGREENHOUSE_API UGreenhouseItemIconWidget : public UViewport
 {
 	GENERATED_BODY()
 
@@ -95,7 +95,7 @@ private:
 };
 
 UCLASS()
-class THEISOLATEDGREENHOUSE_API UGreenhouseInventorySlotButton : public UButton
+class ISOLATEDGREENHOUSE_API UGreenhouseInventorySlotButton : public UButton
 {
 	GENERATED_BODY()
 
@@ -113,7 +113,7 @@ private:
 };
 
 UCLASS()
-class THEISOLATEDGREENHOUSE_API UGreenhouseInventoryWidget : public UUserWidget
+class ISOLATEDGREENHOUSE_API UGreenhouseInventoryWidget : public UUserWidget
 {
 	GENERATED_BODY()
 

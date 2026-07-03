@@ -1,13 +1,13 @@
 using UnrealBuildTool;
 using System.Collections.Generic;
 
-public class TheIsolatedGreenhouseTarget : TargetRules
+public class IsolatedGreenhouseTarget : TargetRules
 {
-	public TheIsolatedGreenhouseTarget(TargetInfo Target) : base(Target)
+	public IsolatedGreenhouseTarget(TargetInfo Target) : base(Target)
 	{
 		Type = TargetType.Game;
 		DefaultBuildSettings = BuildSettingsVersion.V7;
 		IncludeOrderVersion = EngineIncludeOrderVersion.Unreal5_8;
-		ExtraModuleNames.Add("TheIsolatedGreenhouse");
+		ExtraModuleNames.Add("IsolatedGreenhouse");
 	}
 }

@@ -25,7 +25,7 @@ Der Spieler baut nach und nach eine groessere Pflanzenzucht auf, verkauft Ablege
 ## Aktueller technischer Stand
 
 - Engine: Unreal Engine 5.8
-- Projekt: `game/UnrealProject/TheIsolatedGreenhouse.uproject`
+- Projekt: `game/UnrealProject/IsolatedGreenhouse.uproject`
 - Standard-Map: `L_Greenhouse_MVP`
 - Projektart: First-Person Unreal-Projekt mit C++-Grundsystemen und Unreal-Assets
 - Branch fuer laufende Arbeit: `eddis-beta-stuff`

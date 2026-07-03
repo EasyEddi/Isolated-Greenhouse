@@ -5,7 +5,7 @@
   "Description": "A peaceful first-person plant simulator set inside an isolated greenhouse.",
 	"Modules": [
 		{
-			"Name": "TheIsolatedGreenhouse",
+			"Name": "IsolatedGreenhouse",
 			"Type": "Runtime",
 			"LoadingPhase": "Default"
 		}

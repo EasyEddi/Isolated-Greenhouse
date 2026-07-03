@@ -36,7 +36,7 @@ permissions:
   contents: write
 
 env:
-  PROJECT_PATH: game/UnrealProject/TheIsolatedGreenhouse.uproject
+  PROJECT_PATH: game/UnrealProject/IsolatedGreenhouse.uproject
   WINDOWS_UE_ROOT: C:\Program Files\Epic Games\UE_5.8
   MAC_UE_ROOT: /Users/Shared/Epic Games/UE_5.8
 

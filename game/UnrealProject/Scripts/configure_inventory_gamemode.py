@@ -2,7 +2,7 @@ import unreal
 
 
 MAP_PATH = "/Game/Maps/L_Greenhouse_MVP"
-GAME_MODE_PATH = "/Script/TheIsolatedGreenhouse.GreenhouseGameMode"
+GAME_MODE_PATH = "/Script/IsolatedGreenhouse.GreenhouseGameMode"
 
 
 def main():

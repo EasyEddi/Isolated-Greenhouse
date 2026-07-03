@@ -15,7 +15,7 @@ enum class EGreenhouseHeldWaterEffect : uint8
 };
 
 UCLASS()
-class THEISOLATEDGREENHOUSE_API AGreenhouseHeldItemActor : public AActor
+class ISOLATEDGREENHOUSE_API AGreenhouseHeldItemActor : public AActor
 {
 	GENERATED_BODY()
 

@@ -5,7 +5,7 @@
 #include "GreenhouseGameMode.generated.h"
 
 UCLASS()
-class THEISOLATEDGREENHOUSE_API AGreenhouseGameMode : public AGameModeBase
+class ISOLATEDGREENHOUSE_API AGreenhouseGameMode : public AGameModeBase
 {
 	GENERATED_BODY()
 

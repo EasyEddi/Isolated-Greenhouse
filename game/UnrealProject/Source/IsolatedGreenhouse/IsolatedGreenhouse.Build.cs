@@ -1,8 +1,8 @@
 using UnrealBuildTool;
 
-public class TheIsolatedGreenhouse : ModuleRules
+public class IsolatedGreenhouse : ModuleRules
 {
-	public TheIsolatedGreenhouse(ReadOnlyTargetRules Target) : base(Target)
+	public IsolatedGreenhouse(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 

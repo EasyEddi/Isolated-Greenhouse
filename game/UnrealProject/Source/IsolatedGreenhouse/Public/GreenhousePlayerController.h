@@ -13,7 +13,7 @@ class UInputMappingContext;
 class USceneComponent;
 
 UCLASS()
-class THEISOLATEDGREENHOUSE_API AGreenhousePlayerController : public APlayerController
+class ISOLATEDGREENHOUSE_API AGreenhousePlayerController : public APlayerController
 {
 	GENERATED_BODY()
 

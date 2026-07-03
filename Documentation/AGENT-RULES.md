@@ -21,7 +21,7 @@ Der Fokus liegt auf einem stabilen, kleinen spielbaren Loop statt vielen halb fe
 Stand dieser Datei:
 
 - Unreal Engine Version: **5.8**.
-- Projektdatei: `game/UnrealProject/TheIsolatedGreenhouse.uproject`.
+- Projektdatei: `game/UnrealProject/IsolatedGreenhouse.uproject`.
 - Standard-Map: `game/UnrealProject/Content/Maps/L_Greenhouse_MVP.umap`.
 - Standard-Branch fuer laufende Arbeit: `eddis-beta-stuff`.
 - `main` soll nur aktualisiert werden, wenn der User es explizit verlangt.
@@ -64,7 +64,7 @@ Technik-Mix:
 
 Wichtige Pfade:
 
-- C++ Code: `game/UnrealProject/Source/TheIsolatedGreenhouse`
+- C++ Code: `game/UnrealProject/Source/IsolatedGreenhouse`
 - Config: `game/UnrealProject/Config`
 - Map: `game/UnrealProject/Content/Maps/L_Greenhouse_MVP.umap`
 - importierte Unreal-Assets: `game/UnrealProject/Content`
@@ -138,12 +138,12 @@ Bei C++-Aenderungen:
 - kleine, gezielte Aenderungen machen,
 - keine grosse Architektur einfuehren, wenn ein enger Fix reicht,
 - Windows/MSVC ernst nehmen: keine Warnungen ignorieren, die auf Windows als Error behandelt werden koennen,
-- nach Moeglichkeit `TheIsolatedGreenhouseEditor` bauen.
+- nach Moeglichkeit `IsolatedGreenhouseEditor` bauen.
 
 Mac-Build-Beispiel:
 
 ```bash
-'/Users/Shared/Epic Games/UE_5.8/Engine/Build/BatchFiles/Mac/Build.sh' TheIsolatedGreenhouseEditor Mac Development -Project='/Users/eddi/The-Isolated-Greenhouse/game/UnrealProject/TheIsolatedGreenhouse.uproject' -WaitMutex
+'/Users/Shared/Epic Games/UE_5.8/Engine/Build/BatchFiles/Mac/Build.sh' IsolatedGreenhouseEditor Mac Development -Project='/Users/eddi/Isolated-Greenhouse/game/UnrealProject/IsolatedGreenhouse.uproject' -WaitMutex
 ```
 
 Windows braucht Visual Studio 2022 mit `Game development with C++`. Wenn Module auf Windows nicht bauen, zuerst echte `error C...` Zeilen aus dem UnrealBuildTool-Log lesen, nicht nur das Popup.

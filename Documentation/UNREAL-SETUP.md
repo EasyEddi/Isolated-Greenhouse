@@ -17,7 +17,7 @@ git lfs pull
 3. Projektdatei oeffnen:
 
 ```text
-game/UnrealProject/TheIsolatedGreenhouse.uproject
+game/UnrealProject/IsolatedGreenhouse.uproject
 ```
 
 4. Wenn Unreal fragt, Projektdateien/Module neu zu bauen, bestaetigen.
@@ -32,10 +32,10 @@ Content/Maps/L_Greenhouse_MVP
 Wenn C++ geaendert wurde, den Editor-Build ausfuehren:
 
 ```bash
-'/Users/Shared/Epic Games/UE_5.8/Engine/Build/BatchFiles/Mac/Build.sh' TheIsolatedGreenhouseEditor Mac Development -Project='/Users/eddi/The-Isolated-Greenhouse/game/UnrealProject/TheIsolatedGreenhouse.uproject' -WaitMutex
+'/Users/Shared/Epic Games/UE_5.8/Engine/Build/BatchFiles/Mac/Build.sh' IsolatedGreenhouseEditor Mac Development -Project='/Users/eddi/Isolated-Greenhouse/game/UnrealProject/IsolatedGreenhouse.uproject' -WaitMutex
 ```
 
-Auf Windows wird derselbe Build ueber die Unreal-/Visual-Studio-Toolchain ausgefuehrt. Wichtig ist, dass `TheIsolatedGreenhouseEditor` erfolgreich baut.
+Auf Windows wird derselbe Build ueber die Unreal-/Visual-Studio-Toolchain ausgefuehrt. Wichtig ist, dass `IsolatedGreenhouseEditor` erfolgreich baut.
 
 ## Git LFS
 
@@ -53,9 +53,9 @@ git lfs pull
 
 ## Wichtige Pfade
 
-- Projekt: `game/UnrealProject/TheIsolatedGreenhouse.uproject`
+- Projekt: `game/UnrealProject/IsolatedGreenhouse.uproject`
 - Map: `game/UnrealProject/Content/Maps/L_Greenhouse_MVP.umap`
-- C++ Code: `game/UnrealProject/Source/TheIsolatedGreenhouse`
+- C++ Code: `game/UnrealProject/Source/IsolatedGreenhouse`
 - importierte Unreal-Modelle: `game/UnrealProject/Content/models`
 - rohe/source Modelle: `game/UnrealProject/models`
 - Documentation: `Documentation`

@@ -1,6 +1,6 @@
 # Release Rules
 
-These rules apply to GitHub Releases for **The Isolated Greenhouse**.
+These rules apply to GitHub Releases for **Isolated Greenhouse**.
 
 ## Release Title
 
