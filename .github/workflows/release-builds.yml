@@ -6,10 +6,6 @@ on:
       - main
   workflow_dispatch:
     inputs:
-      build_windows:
-        description: Build and attach the Windows release too. Requires an online self-hosted Windows runner.
-        type: boolean
-        default: false
       version_bump:
         description: Version bump for this release. Major is only for explicit owner-approved milestones.
         type: choice
@@ -186,7 +182,7 @@ jobs:
     needs:
       - release-metadata
     runs-on: [self-hosted, Windows]
-    if: ${{ vars.BUILD_WINDOWS_RELEASE == 'true' || (github.event_name == 'workflow_dispatch' && inputs.build_windows) }}
+    timeout-minutes: 180
 
     steps:
       - name: Checkout
@@ -352,14 +348,21 @@ jobs:
           path: release/${{ needs.release-metadata.outputs.mac_asset }}
           if-no-files-found: error
 
-  publish-macos-release:
-    name: Publish macOS GitHub release
+  publish-game-release:
+    name: Publish GitHub release
     needs:
       - release-metadata
+      - build-windows
       - build-macos
     runs-on: ubuntu-latest
 
     steps:
+      - name: Download Windows release artifact
+        uses: actions/download-artifact@v8
+        with:
+          name: IsolatedGreenhouse-Windows
+          path: release-artifacts/IsolatedGreenhouse-Windows
+
       - name: Download macOS release artifact
         uses: actions/download-artifact@v8
         with:
@@ -375,30 +378,5 @@ jobs:
           body: ${{ needs.release-metadata.outputs.body }}
           fail_on_unmatched_files: true
           files: |
-            release-artifacts/IsolatedGreenhouse-macOS/${{ needs.release-metadata.outputs.mac_asset }}
-
-  attach-windows-release:
-    name: Attach Windows release asset
-    needs:
-      - release-metadata
-      - build-windows
-      - publish-macos-release
-    if: ${{ always() && needs.build-windows.result == 'success' && needs.publish-macos-release.result == 'success' }}
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Download Windows release artifact
-        uses: actions/download-artifact@v8
-        with:
-          name: IsolatedGreenhouse-Windows
-          path: release-artifacts/IsolatedGreenhouse-Windows
-
-      - name: Upload Windows asset to GitHub release
-        uses: softprops/action-gh-release@v3
-        with:
-          tag_name: ${{ needs.release-metadata.outputs.tag }}
-          name: ${{ needs.release-metadata.outputs.title }}
-          target_commitish: ${{ github.sha }}
-          fail_on_unmatched_files: true
-          files: |
             release-artifacts/IsolatedGreenhouse-Windows/${{ needs.release-metadata.outputs.windows_asset }}
+            release-artifacts/IsolatedGreenhouse-macOS/${{ needs.release-metadata.outputs.mac_asset }}

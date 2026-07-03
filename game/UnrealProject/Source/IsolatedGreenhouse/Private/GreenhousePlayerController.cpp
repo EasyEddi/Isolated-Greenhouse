@@ -1,6 +1,7 @@
 #include "GreenhousePlayerController.h"
 
 #include "EnhancedInputSubsystems.h"
+#include "Camera/CameraActor.h"
 #include "Camera/CameraComponent.h"
 #include "GreenhouseHeldItemActor.h"
 #include "GreenhouseInventoryWidget.h"
@@ -377,7 +378,7 @@ void AGreenhousePlayerController::SetupInputComponent()
 	InputComponent->BindKey(EKeys::Three, IE_Pressed, this, &AGreenhousePlayerController::SelectHotbarSlotThree);
 	InputComponent->BindKey(EKeys::Four, IE_Pressed, this, &AGreenhousePlayerController::SelectHotbarSlotFour);
 	InputComponent->BindKey(EKeys::Five, IE_Pressed, this, &AGreenhousePlayerController::SelectHotbarSlotFive);
-	InputComponent->BindKey(EKeys::RightMouseButton, IE_Pressed, this, &AGreenhousePlayerController::HandleComputerShopPressed);
+	InputComponent->BindKey(EKeys::Escape, IE_Pressed, this, &AGreenhousePlayerController::HandleComputerTerminalExitPressed);
 	InputComponent->BindKey(EKeys::LeftMouseButton, IE_Pressed, this, &AGreenhousePlayerController::HandleWateringCanPressed);
 	InputComponent->BindKey(EKeys::LeftMouseButton, IE_Released, this, &AGreenhousePlayerController::HandleWateringCanReleased);
 	InputComponent->BindKey(EKeys::LeftShift, IE_Pressed, this, &AGreenhousePlayerController::StartSprint);
@@ -399,10 +400,8 @@ void AGreenhousePlayerController::ToggleInventory()
 
 void AGreenhousePlayerController::HandleInteractOrInventory()
 {
-	if (InventoryWidget && InventoryWidget->IsShopOpen())
+	if (bComputerTerminalOpen || (InventoryWidget && InventoryWidget->IsShopOpen()))
 	{
-		InventoryWidget->CloseOnlineShop();
-		ApplyInventoryInputMode(false);
 		return;
 	}
 
@@ -724,10 +723,9 @@ void AGreenhousePlayerController::HandleComputerShopPressed()
 		return;
 	}
 
-	if (InventoryWidget->IsShopOpen())
+	if (bComputerTerminalOpen || InventoryWidget->IsShopOpen())
 	{
-		InventoryWidget->CloseOnlineShop();
-		ApplyInventoryInputMode(false);
+		CloseComputerTerminal();
 		return;
 	}
 
@@ -742,14 +740,132 @@ void AGreenhousePlayerController::HandleComputerShopPressed()
 		return;
 	}
 
+	OpenComputerTerminal(InteractionHit);
+}
+
+void AGreenhousePlayerController::HandleComputerTerminalExitPressed()
+{
+	if (bComputerTerminalOpen || (InventoryWidget && InventoryWidget->IsShopOpen()))
+	{
+		CloseComputerTerminal();
+	}
+}
+
+void AGreenhousePlayerController::OpenComputerTerminal(const FHitResult& ScreenHit)
+{
+	if (!InventoryWidget || !GetWorld())
+	{
+		return;
+	}
+
+	if (!ComputerTerminalCameraActor)
+	{
+		FActorSpawnParameters SpawnParameters;
+		SpawnParameters.Owner = this;
+		SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+		ComputerTerminalCameraActor = GetWorld()->SpawnActor<ACameraActor>(ACameraActor::StaticClass(), BuildComputerTerminalCameraTransform(ScreenHit), SpawnParameters);
+	}
+	else
+	{
+		ComputerTerminalCameraActor->SetActorTransform(BuildComputerTerminalCameraTransform(ScreenHit));
+	}
+
+	if (!ComputerTerminalCameraActor)
+	{
+		return;
+	}
+
+	StopPouringWater();
+	if (bIsFillingWateringCan)
+	{
+		FinishFillingWateringCan();
+	}
+
+	bComputerTerminalOpen = true;
+	SetIgnoreMoveInput(true);
+	SetIgnoreLookInput(true);
+
+	if (ACharacter* ControlledCharacter = Cast<ACharacter>(GetPawn()))
+	{
+		if (UCharacterMovementComponent* MovementComponent = ControlledCharacter->GetCharacterMovement())
+		{
+			MovementComponent->StopMovementImmediately();
+			MovementComponent->DisableMovement();
+		}
+	}
+
+	SetViewTargetWithBlend(ComputerTerminalCameraActor, 0.45f, VTBlend_Cubic, 0.0f, false);
 	InventoryWidget->OpenOnlineShop();
 	ApplyInventoryInputMode(true);
 }
 
+void AGreenhousePlayerController::CloseComputerTerminal()
+{
+	bComputerTerminalOpen = false;
+
+	if (InventoryWidget)
+	{
+		InventoryWidget->CloseOnlineShop();
+	}
+
+	ApplyInventoryInputMode(false);
+	SetIgnoreMoveInput(false);
+	SetIgnoreLookInput(false);
+
+	if (ACharacter* ControlledCharacter = Cast<ACharacter>(GetPawn()))
+	{
+		if (UCharacterMovementComponent* MovementComponent = ControlledCharacter->GetCharacterMovement())
+		{
+			MovementComponent->SetMovementMode(MOVE_Walking);
+		}
+
+		SetViewTargetWithBlend(ControlledCharacter, 0.35f, VTBlend_Cubic, 0.0f, false);
+	}
+}
+
+FTransform AGreenhousePlayerController::BuildComputerTerminalCameraTransform(const FHitResult& ScreenHit) const
+{
+	const FVector ScreenPoint = !ScreenHit.ImpactPoint.IsNearlyZero() ? ScreenHit.ImpactPoint : ScreenHit.Location;
+	FVector ScreenNormal = ScreenHit.ImpactNormal.GetSafeNormal();
+
+	if (ScreenNormal.IsNearlyZero())
+	{
+		ScreenNormal = PlayerCameraManager ? -PlayerCameraManager->GetCameraRotation().Vector() : FVector::BackwardVector;
+	}
+
+	if (PlayerCameraManager)
+	{
+		const FVector CurrentCameraToScreen = PlayerCameraManager->GetCameraLocation() - ScreenPoint;
+		if (FVector::DotProduct(ScreenNormal, CurrentCameraToScreen) < 0.0f)
+		{
+			ScreenNormal *= -1.0f;
+		}
+	}
+
+	const FVector CameraLocation = ScreenPoint + ScreenNormal * 92.0f + FVector(0.0f, 0.0f, 8.0f);
+	FRotator CameraRotation = (ScreenPoint - CameraLocation).Rotation();
+	CameraRotation.Roll = 0.0f;
+
+	return FTransform(CameraRotation, CameraLocation);
+}
+
 void AGreenhousePlayerController::HandleWateringCanFillPressed()
 {
-	if (InventoryWidget && (InventoryWidget->IsInventoryOpen() || InventoryWidget->IsShopOpen()))
+	if (bComputerTerminalOpen || (InventoryWidget && InventoryWidget->IsShopOpen()))
 	{
+		CloseComputerTerminal();
+		return;
+	}
+
+	if (InventoryWidget && InventoryWidget->IsInventoryOpen())
+	{
+		return;
+	}
+
+	FHitResult InteractionHit;
+	if (TraceForInteraction(InteractionHit) && InteractionHit.bBlockingHit && IsComputerScreenHit(InteractionHit))
+	{
+		OpenComputerTerminal(InteractionHit);
 		return;
 	}
 

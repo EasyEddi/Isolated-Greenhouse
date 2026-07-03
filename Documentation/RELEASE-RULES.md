@@ -81,6 +81,8 @@ Only upload a `.exe` if it is a genuinely standalone installer or self-contained
 
 ## Workflow Notes
 
+The release workflow requires both self-hosted runners for normal releases: Windows for the Windows package and macOS for the macOS package. The GitHub release is published only after both platform artifacts are available.
+
 The release workflow calculates the next version from the newest tag matching:
 
 ```text

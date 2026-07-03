@@ -13,6 +13,7 @@ class UHorizontalBox;
 class UOverlay;
 class USizeBox;
 class UTextBlock;
+class UWidget;
 class UVerticalBox;
 class UPointLightComponent;
 class USceneComponent;
@@ -143,6 +144,13 @@ private:
 		GardenSupplies
 	};
 
+	enum class EGreenhouseShopBuyCategory : uint8
+	{
+		SeedPacks,
+		Supplies,
+		Equipment
+	};
+
 	static constexpr int32 HotbarSlotCount = 5;
 	static constexpr int32 InventoryColumnCount = 9;
 	static constexpr int32 InventoryRowCount = 3;
@@ -171,12 +179,6 @@ private:
 	TObjectPtr<UVerticalBox> ShopContentPanel;
 
 	UPROPERTY()
-	TObjectPtr<UTextBlock> ShopTitleText;
-
-	UPROPERTY()
-	TObjectPtr<UTextBlock> ShopMoneyText;
-
-	UPROPERTY()
 	TObjectPtr<UTextBlock> PlayerMoneyText;
 
 	UPROPERTY()
@@ -184,6 +186,21 @@ private:
 
 	UPROPERTY()
 	TObjectPtr<UTextBlock> PlantBuyQuantityText;
+
+	UPROPERTY()
+	TObjectPtr<UBorder> ShopBuyTabBackground;
+
+	UPROPERTY()
+	TObjectPtr<UBorder> ShopSellTabBackground;
+
+	UPROPERTY()
+	TObjectPtr<UBorder> ShopSeedPacksCategoryBackground;
+
+	UPROPERTY()
+	TObjectPtr<UBorder> ShopSuppliesCategoryBackground;
+
+	UPROPERTY()
+	TObjectPtr<UBorder> ShopEquipmentCategoryBackground;
 
 	UPROPERTY()
 	TObjectPtr<USizeBox> CrosshairDot;
@@ -223,7 +240,8 @@ private:
 	int32 SelectedHotbarSlot = 0;
 	int32 Money = 120;
 	int32 PlantBuyQuantity = 1;
-	EGreenhouseShopPage CurrentShopPage = EGreenhouseShopPage::Home;
+	EGreenhouseShopPage CurrentShopPage = EGreenhouseShopPage::BuyPlants;
+	EGreenhouseShopBuyCategory CurrentShopBuyCategory = EGreenhouseShopBuyCategory::SeedPacks;
 	bool bInventoryOpen = false;
 	bool bShopOpen = false;
 	bool bBuilt = false;
@@ -234,14 +252,27 @@ private:
 	UTextBlock* CreateLabel(const FText& Text, const FLinearColor& Color, int32 FontSize, ETextJustify::Type Justification = ETextJustify::Center);
 	UButton* CreateDebugButton(const FName Name, const FText& Label, UVerticalBox* ParentPanel);
 	UButton* CreateShopButton(const FName Name, const FText& Label, UVerticalBox* ParentPanel);
+	UButton* CreateShopTabButton(const FName Name, UWidget* IconWidget, UBorder*& OutBackground);
+	UButton* CreateShopProductButton(const FName Name, EGreenhouseInventoryItem Item, int32 Price, UHorizontalBox* ParentRow);
+	UButton* CreateIconOnlyShopButton(const FName Name, UWidget* IconWidget, const FVector2D& Size);
+	UWidget* CreateLeafIcon(const FName Name, const FVector2D& Size, const FLinearColor& MainColor, const FLinearColor& ShadowColor);
+	UWidget* CreateCartIcon(const FName Name, const FVector2D& Size, const FLinearColor& MainColor, const FLinearColor& ShadowColor);
+	UWidget* CreateSeedPackIcon(const FName Name, const FVector2D& Size);
+	UWidget* CreateSuppliesIcon(const FName Name, const FVector2D& Size);
+	UWidget* CreateEquipmentIcon(const FName Name, const FVector2D& Size);
+	void AddLeafPart(UOverlay* Overlay, const FName Name, const FVector2D& Size, const FMargin& InPadding, const FLinearColor& Color, float AngleDegrees);
+	void AddBoxPart(UOverlay* Overlay, const FName Name, const FVector2D& Size, const FMargin& InPadding, const FLinearColor& Color, float AngleDegrees = 0.0f);
 	bool HasItem(EGreenhouseInventoryItem Item) const;
 	int32 CountItem(EGreenhouseInventoryItem Item) const;
 	bool RemoveItem(EGreenhouseInventoryItem Item, int32 Count);
 	void RefreshSlots();
 	void RefreshCursorPreview();
 	void RefreshShopHeader();
+	void RefreshShopTabs();
+	void RefreshShopCategoryTabs();
 	void ShowShopHome();
 	void ShowPlantBuyPage();
+	void ShowShopBuyCategory(EGreenhouseShopBuyCategory Category);
 	void ShowPlantSellPage();
 	void ShowGardenSuppliesPage();
 	void SetShopStatus(const FText& StatusText, const FLinearColor& Color);
@@ -286,6 +317,15 @@ private:
 	void HandleOpenGardenSuppliesPage();
 
 	UFUNCTION()
+	void HandleOpenSeedPacksCategory();
+
+	UFUNCTION()
+	void HandleOpenSuppliesCategory();
+
+	UFUNCTION()
+	void HandleOpenEquipmentCategory();
+
+	UFUNCTION()
 	void IncreasePlantBuyQuantity();
 
 	UFUNCTION()
@@ -308,4 +348,10 @@ private:
 
 	UFUNCTION()
 	void BuyWateringCan();
+
+	UFUNCTION()
+	void BuyTrowel();
+
+	UFUNCTION()
+	void BuySecateur();
 };

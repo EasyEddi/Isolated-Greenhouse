@@ -7,6 +7,7 @@
 
 class AGreenhouseHeldItemActor;
 class AGreenhousePlantingPlotActor;
+class ACameraActor;
 class AStaticMeshActor;
 class UGreenhouseInventoryWidget;
 class UInputMappingContext;
@@ -48,6 +49,9 @@ private:
 	TObjectPtr<AStaticMeshActor> FillingWaterStreamActor;
 
 	UPROPERTY()
+	TObjectPtr<ACameraActor> ComputerTerminalCameraActor;
+
+	UPROPERTY()
 	TArray<TObjectPtr<AStaticMeshActor>> FillingWaterFlowActors;
 
 	UPROPERTY()
@@ -69,6 +73,7 @@ private:
 	bool bIsFillingWateringCan = false;
 	bool bIsPouringWater = false;
 	bool bStopPouringWhenVisualEnds = false;
+	bool bComputerTerminalOpen = false;
 
 	void ToggleInventory();
 	void HandleInteractOrInventory();
@@ -77,6 +82,10 @@ private:
 	bool FindItemPlacementSlot(EGreenhouseInventoryItem SelectedItem, const FHitResult& InteractionHit, FTransform& OutPlacementTransform, uint32& OutSlotKey) const;
 	bool IsPlacementSlotOccupied(uint32 SlotKey) const;
 	void HandleComputerShopPressed();
+	void HandleComputerTerminalExitPressed();
+	void OpenComputerTerminal(const FHitResult& ScreenHit);
+	void CloseComputerTerminal();
+	FTransform BuildComputerTerminalCameraTransform(const FHitResult& ScreenHit) const;
 	void HandleWateringCanFillPressed();
 	bool TryStartFillingSelectedWateringCan();
 	void HandleWateringCanPressed();

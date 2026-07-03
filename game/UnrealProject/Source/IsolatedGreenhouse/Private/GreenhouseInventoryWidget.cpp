@@ -16,6 +16,7 @@
 #include "Components/TextBlock.h"
 #include "Components/VerticalBox.h"
 #include "Components/VerticalBoxSlot.h"
+#include "Components/Widget.h"
 #include "Styling/SlateTypes.h"
 #include "Widgets/SWidget.h"
 
@@ -378,66 +379,44 @@ void UGreenhouseInventoryWidget::BuildInterface()
 	UCanvasPanelSlot* TopRightHudSlot = RootCanvas->AddChildToCanvas(TopRightHudPanel);
 	TopRightHudSlot->SetAnchors(FAnchors(1.0f, 0.0f));
 	TopRightHudSlot->SetAlignment(FVector2D(1.0f, 0.0f));
-	TopRightHudSlot->SetPosition(FVector2D(-24.0f, 24.0f));
+	TopRightHudSlot->SetPosition(FVector2D(-10.0f, 10.0f));
 	TopRightHudSlot->SetAutoSize(true);
 	TopRightHudSlot->SetZOrder(40);
 
-	auto CreateMoneyField = [this](const FName FrameName, const FName RowName, const FName BillsName, const FName BillStackName, const FString& BillPrefix, UTextBlock*& OutMoneyText) -> UBorder*
+	auto CreateMoneyField = [this](const FName FrameName, const FName RowName, const FName LeafName, UTextBlock*& OutMoneyText) -> UBorder*
 	{
 		UBorder* MoneyFrame = WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass(), FrameName);
-		MoneyFrame->SetBrushColor(FLinearColor(0.07f, 0.12f, 0.085f, 0.94f));
-		MoneyFrame->SetPadding(FMargin(12.0f, 8.0f, 14.0f, 8.0f));
+		MoneyFrame->SetBrushColor(FLinearColor(0.035f, 0.075f, 0.052f, 0.94f));
+		MoneyFrame->SetPadding(FMargin(14.0f, 8.0f, 10.0f, 8.0f));
 
 		UHorizontalBox* MoneyRow = WidgetTree->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass(), RowName);
 		MoneyFrame->SetContent(MoneyRow);
 
-		USizeBox* MoneyIconBox = WidgetTree->ConstructWidget<USizeBox>(USizeBox::StaticClass(), BillsName);
-		MoneyIconBox->SetWidthOverride(68.0f);
-		MoneyIconBox->SetHeightOverride(42.0f);
-		UHorizontalBoxSlot* MoneyIconSlot = MoneyRow->AddChildToHorizontalBox(MoneyIconBox);
-		MoneyIconSlot->SetPadding(FMargin(0.0f, 0.0f, 10.0f, 0.0f));
-		MoneyIconSlot->SetVerticalAlignment(VAlign_Center);
-
-		UOverlay* MoneyIconOverlay = WidgetTree->ConstructWidget<UOverlay>(UOverlay::StaticClass(), BillStackName);
-		MoneyIconBox->AddChild(MoneyIconOverlay);
-
-		auto AddMoneyBill = [this, MoneyIconOverlay, &BillPrefix](const TCHAR* Suffix, const FMargin& BillPadding, const FLinearColor& Color, const FLinearColor& TextColor)
-		{
-			const FName BillName(*FString::Printf(TEXT("%s%s"), *BillPrefix, Suffix));
-			USizeBox* BillBox = WidgetTree->ConstructWidget<USizeBox>(USizeBox::StaticClass(), BillName);
-			BillBox->SetWidthOverride(48.0f);
-			BillBox->SetHeightOverride(25.0f);
-
-			UBorder* BillBorder = WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass());
-			BillBorder->SetBrushColor(Color);
-			BillBorder->SetPadding(FMargin(2.0f, 1.0f, 2.0f, 1.0f));
-			BillBox->AddChild(BillBorder);
-
-			UTextBlock* BillText = CreateLabel(FText::FromString(TEXT("$")), TextColor, 12);
-			BillBorder->SetContent(BillText);
-
-			UOverlaySlot* BillSlot = MoneyIconOverlay->AddChildToOverlay(BillBox);
-			BillSlot->SetHorizontalAlignment(HAlign_Left);
-			BillSlot->SetVerticalAlignment(VAlign_Top);
-			BillSlot->SetPadding(BillPadding);
-		};
-
-		AddMoneyBill(TEXT("Back"), FMargin(0.0f, 12.0f, 0.0f, 0.0f), FLinearColor(0.22f, 0.46f, 0.25f, 1.0f), FLinearColor(0.76f, 0.90f, 0.63f, 1.0f));
-		AddMoneyBill(TEXT("Middle"), FMargin(8.0f, 6.0f, 0.0f, 0.0f), FLinearColor(0.33f, 0.62f, 0.34f, 1.0f), FLinearColor(0.86f, 0.96f, 0.70f, 1.0f));
-		AddMoneyBill(TEXT("Front"), FMargin(16.0f, 0.0f, 0.0f, 0.0f), FLinearColor(0.43f, 0.74f, 0.40f, 1.0f), FLinearColor(0.94f, 1.0f, 0.76f, 1.0f));
-
-		OutMoneyText = CreateLabel(FText::GetEmpty(), FLinearColor(0.78f, 0.98f, 0.73f, 1.0f), 20);
+		OutMoneyText = CreateLabel(FText::GetEmpty(), FLinearColor(0.80f, 1.0f, 0.73f, 1.0f), 23);
 		UHorizontalBoxSlot* MoneyTextSlot = MoneyRow->AddChildToHorizontalBox(OutMoneyText);
-		MoneyTextSlot->SetPadding(FMargin(0.0f, 8.0f, 0.0f, 0.0f));
+		MoneyTextSlot->SetPadding(FMargin(0.0f, 4.0f, 9.0f, 0.0f));
 		MoneyTextSlot->SetVerticalAlignment(VAlign_Center);
+
+		UWidget* LeafIcon = CreateLeafIcon(LeafName, FVector2D(42.0f, 30.0f), FLinearColor(0.31f, 0.88f, 0.38f, 1.0f), FLinearColor(0.18f, 0.62f, 0.27f, 1.0f));
+		UHorizontalBoxSlot* LeafSlot = MoneyRow->AddChildToHorizontalBox(LeafIcon);
+		LeafSlot->SetPadding(FMargin(0.0f, 0.0f, 0.0f, 0.0f));
+		LeafSlot->SetVerticalAlignment(VAlign_Center);
 
 		return MoneyFrame;
 	};
+
+	UTextBlock* CreatedPlayerMoneyText = nullptr;
+	UBorder* PlayerMoneyFrame = CreateMoneyField(TEXT("PlayerMoneyFrame"), TEXT("PlayerMoneyRow"), TEXT("PlayerMoneyLeaf"), CreatedPlayerMoneyText);
+	PlayerMoneyText = CreatedPlayerMoneyText;
+	UVerticalBoxSlot* PlayerMoneySlot = TopRightHudPanel->AddChildToVerticalBox(PlayerMoneyFrame);
+	PlayerMoneySlot->SetPadding(FMargin(0.0f));
+	PlayerMoneySlot->SetHorizontalAlignment(HAlign_Right);
 
 	DebugFrame = WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass(), TEXT("DebugFrame"));
 	DebugFrame->SetBrushColor(FLinearColor(0.025f, 0.030f, 0.032f, 0.82f));
 	DebugFrame->SetPadding(FMargin(12.0f, 10.0f, 12.0f, 10.0f));
 	UVerticalBoxSlot* DebugFrameSlot = TopRightHudPanel->AddChildToVerticalBox(DebugFrame);
+	DebugFrameSlot->SetPadding(FMargin(0.0f, 10.0f, 0.0f, 0.0f));
 	DebugFrameSlot->SetHorizontalAlignment(HAlign_Right);
 
 	UVerticalBox* GivePanel = WidgetTree->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("GivePanel"));
@@ -468,16 +447,9 @@ void UGreenhouseInventoryWidget::BuildInterface()
 	UButton* SecateurButton = CreateDebugButton(TEXT("GiveSecateurButton"), FText::FromString(TEXT("Give secateur")), GivePanel);
 	SecateurButton->OnClicked.AddDynamic(this, &UGreenhouseInventoryWidget::GiveSecateur);
 
-	UTextBlock* CreatedPlayerMoneyText = nullptr;
-	UBorder* PlayerMoneyFrame = CreateMoneyField(TEXT("PlayerMoneyFrame"), TEXT("PlayerMoneyRow"), TEXT("PlayerMoneyBills"), TEXT("PlayerMoneyBillStack"), TEXT("PlayerMoneyBill"), CreatedPlayerMoneyText);
-	PlayerMoneyText = CreatedPlayerMoneyText;
-	UVerticalBoxSlot* PlayerMoneySlot = TopRightHudPanel->AddChildToVerticalBox(PlayerMoneyFrame);
-	PlayerMoneySlot->SetPadding(FMargin(0.0f, 10.0f, 0.0f, 0.0f));
-	PlayerMoneySlot->SetHorizontalAlignment(HAlign_Right);
-
 	ShopFrame = WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass(), TEXT("OnlineShopFrame"));
 	ShopFrame->SetBrushColor(FLinearColor(0.04f, 0.06f, 0.075f, 0.97f));
-	ShopFrame->SetPadding(FMargin(30.0f, 24.0f, 30.0f, 26.0f));
+	ShopFrame->SetPadding(FMargin(38.0f, 32.0f, 38.0f, 34.0f));
 	UCanvasPanelSlot* ShopCanvasSlot = RootCanvas->AddChildToCanvas(ShopFrame);
 	ShopCanvasSlot->SetAnchors(FAnchors(0.5f, 0.5f));
 	ShopCanvasSlot->SetAlignment(FVector2D(0.5f, 0.5f));
@@ -486,15 +458,15 @@ void UGreenhouseInventoryWidget::BuildInterface()
 	ShopCanvasSlot->SetZOrder(80);
 
 	USizeBox* ShopSizeBox = WidgetTree->ConstructWidget<USizeBox>(USizeBox::StaticClass(), TEXT("OnlineShopSize"));
-	ShopSizeBox->SetWidthOverride(760.0f);
-	ShopSizeBox->SetHeightOverride(500.0f);
+	ShopSizeBox->SetWidthOverride(980.0f);
+	ShopSizeBox->SetHeightOverride(620.0f);
 	ShopFrame->SetContent(ShopSizeBox);
 
 	ShopPanel = WidgetTree->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("OnlineShopPanel"));
 	ShopSizeBox->AddChild(ShopPanel);
 
 	USizeBox* ShopHeaderSize = WidgetTree->ConstructWidget<USizeBox>(USizeBox::StaticClass(), TEXT("OnlineShopHeaderSize"));
-	ShopHeaderSize->SetHeightOverride(64.0f);
+	ShopHeaderSize->SetHeightOverride(76.0f);
 	UVerticalBoxSlot* ShopHeaderSlot = ShopPanel->AddChildToVerticalBox(ShopHeaderSize);
 	ShopHeaderSlot->SetPadding(FMargin(0.0f, 0.0f, 0.0f, 18.0f));
 	ShopHeaderSlot->SetHorizontalAlignment(HAlign_Fill);
@@ -502,26 +474,30 @@ void UGreenhouseInventoryWidget::BuildInterface()
 	UOverlay* ShopHeaderOverlay = WidgetTree->ConstructWidget<UOverlay>(UOverlay::StaticClass(), TEXT("OnlineShopHeader"));
 	ShopHeaderSize->AddChild(ShopHeaderOverlay);
 
-	UHorizontalBox* ShopTitleRow = WidgetTree->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass(), TEXT("OnlineShopTitleRow"));
-	UOverlaySlot* ShopTitleRowSlot = ShopHeaderOverlay->AddChildToOverlay(ShopTitleRow);
-	ShopTitleRowSlot->SetHorizontalAlignment(HAlign_Left);
-	ShopTitleRowSlot->SetVerticalAlignment(VAlign_Top);
+	UHorizontalBox* ShopTabRow = WidgetTree->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass(), TEXT("OnlineShopTabRow"));
+	UOverlaySlot* ShopTabRowSlot = ShopHeaderOverlay->AddChildToOverlay(ShopTabRow);
+	ShopTabRowSlot->SetHorizontalAlignment(HAlign_Left);
+	ShopTabRowSlot->SetVerticalAlignment(VAlign_Top);
 
-	UButton* BackButton = CreateShopButton(TEXT("ShopBackButton"), FText::FromString(TEXT("Back")), nullptr);
-	BackButton->OnClicked.AddDynamic(this, &UGreenhouseInventoryWidget::HandleShopBack);
-	UHorizontalBoxSlot* BackButtonSlot = ShopTitleRow->AddChildToHorizontalBox(BackButton);
-	BackButtonSlot->SetPadding(FMargin(0.0f, 0.0f, 18.0f, 0.0f));
+	UBorder* CreatedBuyTabBackground = nullptr;
+	UButton* BuyTabButton = CreateShopTabButton(
+		TEXT("ShopBuyTabButton"),
+		CreateCartIcon(TEXT("ShopBuyTabCartIcon"), FVector2D(46.0f, 36.0f), FLinearColor(0.66f, 0.89f, 0.77f, 1.0f), FLinearColor(0.22f, 0.43f, 0.35f, 1.0f)),
+		CreatedBuyTabBackground);
+	ShopBuyTabBackground = CreatedBuyTabBackground;
+	BuyTabButton->OnClicked.AddDynamic(this, &UGreenhouseInventoryWidget::HandleOpenPlantBuyPage);
+	UHorizontalBoxSlot* BuyTabSlot = ShopTabRow->AddChildToHorizontalBox(BuyTabButton);
+	BuyTabSlot->SetPadding(FMargin(0.0f, 0.0f, 10.0f, 0.0f));
 
-	ShopTitleText = CreateLabel(FText::FromString(TEXT("Greenhouse Market")), FLinearColor(0.91f, 0.96f, 0.90f, 1.0f), 26);
-	UHorizontalBoxSlot* ShopTitleSlot = ShopTitleRow->AddChildToHorizontalBox(ShopTitleText);
-	ShopTitleSlot->SetPadding(FMargin(0.0f, 5.0f, 0.0f, 0.0f));
-
-	UTextBlock* CreatedShopMoneyText = nullptr;
-	UBorder* MoneyFrame = CreateMoneyField(TEXT("ShopMoneyFrame"), TEXT("ShopMoneyRow"), TEXT("ShopMoneyBills"), TEXT("ShopMoneyBillStack"), TEXT("ShopMoneyBill"), CreatedShopMoneyText);
-	ShopMoneyText = CreatedShopMoneyText;
-	UOverlaySlot* MoneyFrameSlot = ShopHeaderOverlay->AddChildToOverlay(MoneyFrame);
-	MoneyFrameSlot->SetHorizontalAlignment(HAlign_Right);
-	MoneyFrameSlot->SetVerticalAlignment(VAlign_Top);
+	UBorder* CreatedSellTabBackground = nullptr;
+	UButton* SellTabButton = CreateShopTabButton(
+		TEXT("ShopSellTabButton"),
+		CreateLeafIcon(TEXT("ShopSellTabLeafIcon"), FVector2D(44.0f, 32.0f), FLinearColor(0.31f, 0.88f, 0.38f, 1.0f), FLinearColor(0.18f, 0.62f, 0.27f, 1.0f)),
+		CreatedSellTabBackground);
+	ShopSellTabBackground = CreatedSellTabBackground;
+	SellTabButton->OnClicked.AddDynamic(this, &UGreenhouseInventoryWidget::HandleOpenPlantSellPage);
+	UHorizontalBoxSlot* SellTabSlot = ShopTabRow->AddChildToHorizontalBox(SellTabButton);
+	SellTabSlot->SetPadding(FMargin(0.0f));
 
 	ShopContentPanel = WidgetTree->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("OnlineShopContent"));
 	UVerticalBoxSlot* ShopContentSlot = ShopPanel->AddChildToVerticalBox(ShopContentPanel);
@@ -700,6 +676,276 @@ UButton* UGreenhouseInventoryWidget::CreateShopButton(const FName Name, const FT
 	return Button;
 }
 
+UButton* UGreenhouseInventoryWidget::CreateShopTabButton(const FName Name, UWidget* IconWidget, UBorder*& OutBackground)
+{
+	UButton* Button = WidgetTree->ConstructWidget<UButton>(UButton::StaticClass(), Name);
+	Button->SetBackgroundColor(FLinearColor::Transparent);
+
+	FButtonStyle ButtonStyle = Button->GetStyle();
+	ButtonStyle.SetNormal(FSlateNoResource());
+	ButtonStyle.SetHovered(FSlateNoResource());
+	ButtonStyle.SetPressed(FSlateNoResource());
+	ButtonStyle.SetDisabled(FSlateNoResource());
+	ButtonStyle.NormalPadding = FMargin(0.0f);
+	ButtonStyle.PressedPadding = FMargin(0.0f);
+	Button->SetStyle(ButtonStyle);
+
+	USizeBox* SizeBox = WidgetTree->ConstructWidget<USizeBox>(USizeBox::StaticClass());
+	SizeBox->SetWidthOverride(76.0f);
+	SizeBox->SetHeightOverride(66.0f);
+
+	OutBackground = WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass());
+	OutBackground->SetBrushColor(FLinearColor(0.36f, 0.38f, 0.36f, 0.92f));
+	OutBackground->SetPadding(FMargin(3.0f));
+	SizeBox->AddChild(OutBackground);
+
+	UBorder* Inner = WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass());
+	Inner->SetBrushColor(FLinearColor(0.01f, 0.012f, 0.011f, 0.97f));
+	Inner->SetPadding(FMargin(10.0f, 9.0f, 10.0f, 9.0f));
+	OutBackground->SetContent(Inner);
+
+	Inner->SetContent(IconWidget);
+	Button->AddChild(SizeBox);
+	return Button;
+}
+
+UButton* UGreenhouseInventoryWidget::CreateShopProductButton(const FName Name, EGreenhouseInventoryItem Item, int32 Price, UHorizontalBox* ParentRow)
+{
+	UButton* Button = WidgetTree->ConstructWidget<UButton>(UButton::StaticClass(), Name);
+	Button->SetBackgroundColor(FLinearColor::Transparent);
+
+	FButtonStyle ButtonStyle = Button->GetStyle();
+	ButtonStyle.SetNormal(FSlateNoResource());
+	ButtonStyle.SetHovered(FSlateNoResource());
+	ButtonStyle.SetPressed(FSlateNoResource());
+	ButtonStyle.SetDisabled(FSlateNoResource());
+	ButtonStyle.NormalPadding = FMargin(0.0f);
+	ButtonStyle.PressedPadding = FMargin(0.0f);
+	Button->SetStyle(ButtonStyle);
+
+	USizeBox* SizeBox = WidgetTree->ConstructWidget<USizeBox>(USizeBox::StaticClass());
+	SizeBox->SetWidthOverride(154.0f);
+	SizeBox->SetHeightOverride(166.0f);
+
+	UBorder* Outer = WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass());
+	Outer->SetBrushColor(FLinearColor(0.42f, 0.44f, 0.42f, 0.95f));
+	Outer->SetPadding(FMargin(3.0f));
+	SizeBox->AddChild(Outer);
+
+	UBorder* Inner = WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass());
+	Inner->SetBrushColor(FLinearColor(0.008f, 0.010f, 0.008f, 0.98f));
+	Inner->SetPadding(FMargin(0.0f));
+	Outer->SetContent(Inner);
+
+	UOverlay* Overlay = WidgetTree->ConstructWidget<UOverlay>(UOverlay::StaticClass());
+	Inner->SetContent(Overlay);
+
+	UGreenhouseItemIconWidget* Icon = WidgetTree->ConstructWidget<UGreenhouseItemIconWidget>(UGreenhouseItemIconWidget::StaticClass());
+	Icon->SetItem(Item);
+	UOverlaySlot* IconSlot = Overlay->AddChildToOverlay(Icon);
+	IconSlot->SetHorizontalAlignment(HAlign_Fill);
+	IconSlot->SetVerticalAlignment(VAlign_Fill);
+	IconSlot->SetPadding(FMargin(12.0f, 8.0f, 12.0f, 34.0f));
+
+	UBorder* PriceFrame = WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass());
+	PriceFrame->SetBrushColor(FLinearColor(0.035f, 0.075f, 0.052f, 0.92f));
+	PriceFrame->SetPadding(FMargin(10.0f, 5.0f, 7.0f, 5.0f));
+	UOverlaySlot* PriceFrameSlot = Overlay->AddChildToOverlay(PriceFrame);
+	PriceFrameSlot->SetHorizontalAlignment(HAlign_Right);
+	PriceFrameSlot->SetVerticalAlignment(VAlign_Bottom);
+	PriceFrameSlot->SetPadding(FMargin(0.0f, 0.0f, 8.0f, 8.0f));
+
+	UHorizontalBox* PriceRow = WidgetTree->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass());
+	PriceFrame->SetContent(PriceRow);
+
+	UTextBlock* PriceText = CreateLabel(FText::AsNumber(Price), FLinearColor(0.80f, 1.0f, 0.73f, 1.0f), 18);
+	UHorizontalBoxSlot* PriceTextSlot = PriceRow->AddChildToHorizontalBox(PriceText);
+	PriceTextSlot->SetVerticalAlignment(VAlign_Center);
+	PriceTextSlot->SetPadding(FMargin(0.0f, 1.0f, 4.0f, 0.0f));
+
+	UWidget* LeafIcon = CreateLeafIcon(*FString::Printf(TEXT("%sPriceLeaf"), *Name.ToString()), FVector2D(24.0f, 18.0f), FLinearColor(0.31f, 0.88f, 0.38f, 1.0f), FLinearColor(0.18f, 0.62f, 0.27f, 1.0f));
+	UHorizontalBoxSlot* LeafSlot = PriceRow->AddChildToHorizontalBox(LeafIcon);
+	LeafSlot->SetVerticalAlignment(VAlign_Center);
+
+	Button->AddChild(SizeBox);
+
+	if (ParentRow)
+	{
+		UHorizontalBoxSlot* ProductSlot = ParentRow->AddChildToHorizontalBox(Button);
+		ProductSlot->SetPadding(FMargin(0.0f, 0.0f, 18.0f, 0.0f));
+	}
+
+	return Button;
+}
+
+UButton* UGreenhouseInventoryWidget::CreateIconOnlyShopButton(const FName Name, UWidget* IconWidget, const FVector2D& Size)
+{
+	UButton* Button = WidgetTree->ConstructWidget<UButton>(UButton::StaticClass(), Name);
+	Button->SetBackgroundColor(FLinearColor::Transparent);
+
+	FButtonStyle ButtonStyle = Button->GetStyle();
+	ButtonStyle.SetNormal(FSlateNoResource());
+	ButtonStyle.SetHovered(FSlateNoResource());
+	ButtonStyle.SetPressed(FSlateNoResource());
+	ButtonStyle.SetDisabled(FSlateNoResource());
+	ButtonStyle.NormalPadding = FMargin(0.0f);
+	ButtonStyle.PressedPadding = FMargin(0.0f);
+	Button->SetStyle(ButtonStyle);
+
+	USizeBox* SizeBox = WidgetTree->ConstructWidget<USizeBox>(USizeBox::StaticClass());
+	SizeBox->SetWidthOverride(Size.X);
+	SizeBox->SetHeightOverride(Size.Y);
+
+	UBorder* Outer = WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass());
+	Outer->SetBrushColor(FLinearColor(0.42f, 0.44f, 0.42f, 0.95f));
+	Outer->SetPadding(FMargin(3.0f));
+	SizeBox->AddChild(Outer);
+
+	UBorder* Inner = WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass());
+	Inner->SetBrushColor(FLinearColor(0.008f, 0.010f, 0.008f, 0.98f));
+	Inner->SetPadding(FMargin(8.0f));
+	Outer->SetContent(Inner);
+
+	Inner->SetContent(IconWidget);
+	Button->AddChild(SizeBox);
+	return Button;
+}
+
+UWidget* UGreenhouseInventoryWidget::CreateLeafIcon(const FName Name, const FVector2D& Size, const FLinearColor& MainColor, const FLinearColor& ShadowColor)
+{
+	USizeBox* IconBox = WidgetTree->ConstructWidget<USizeBox>(USizeBox::StaticClass(), Name);
+	IconBox->SetWidthOverride(Size.X);
+	IconBox->SetHeightOverride(Size.Y);
+
+	UOverlay* Overlay = WidgetTree->ConstructWidget<UOverlay>(UOverlay::StaticClass());
+	IconBox->AddChild(Overlay);
+
+	AddBoxPart(Overlay, *FString::Printf(TEXT("%sStem"), *Name.ToString()), FVector2D(Size.X * 0.22f, FMath::Max(2.0f, Size.Y * 0.13f)), FMargin(Size.X * 0.00f, Size.Y * 0.64f, 0.0f, 0.0f), ShadowColor, -10.0f);
+	AddBoxPart(Overlay, *FString::Printf(TEXT("%sBase"), *Name.ToString()), FVector2D(Size.X * 0.30f, Size.Y * 0.34f), FMargin(Size.X * 0.18f, Size.Y * 0.42f, 0.0f, 0.0f), MainColor, -10.0f);
+	AddBoxPart(Overlay, *FString::Printf(TEXT("%sCore"), *Name.ToString()), FVector2D(Size.X * 0.44f, Size.Y * 0.58f), FMargin(Size.X * 0.34f, Size.Y * 0.20f, 0.0f, 0.0f), MainColor, -10.0f);
+	AddBoxPart(Overlay, *FString::Printf(TEXT("%sTopFacet"), *Name.ToString()), FVector2D(Size.X * 0.34f, Size.Y * 0.22f), FMargin(Size.X * 0.42f, Size.Y * 0.12f, 0.0f, 0.0f), FLinearColor(0.43f, 0.98f, 0.50f, MainColor.A), -10.0f);
+	AddBoxPart(Overlay, *FString::Printf(TEXT("%sTip"), *Name.ToString()), FVector2D(Size.X * 0.24f, Size.Y * 0.38f), FMargin(Size.X * 0.72f, Size.Y * 0.28f, 0.0f, 0.0f), MainColor, -10.0f);
+	AddBoxPart(Overlay, *FString::Printf(TEXT("%sBottomFacet"), *Name.ToString()), FVector2D(Size.X * 0.30f, Size.Y * 0.20f), FMargin(Size.X * 0.45f, Size.Y * 0.60f, 0.0f, 0.0f), ShadowColor, -10.0f);
+
+	return IconBox;
+}
+
+UWidget* UGreenhouseInventoryWidget::CreateCartIcon(const FName Name, const FVector2D& Size, const FLinearColor& MainColor, const FLinearColor& ShadowColor)
+{
+	USizeBox* IconBox = WidgetTree->ConstructWidget<USizeBox>(USizeBox::StaticClass(), Name);
+	IconBox->SetWidthOverride(Size.X);
+	IconBox->SetHeightOverride(Size.Y);
+
+	UOverlay* Overlay = WidgetTree->ConstructWidget<UOverlay>(UOverlay::StaticClass());
+	IconBox->AddChild(Overlay);
+
+	AddBoxPart(Overlay, *FString::Printf(TEXT("%sBasketShadow"), *Name.ToString()), FVector2D(Size.X * 0.62f, Size.Y * 0.34f), FMargin(Size.X * 0.20f, Size.Y * 0.36f, 0.0f, 0.0f), ShadowColor, 0.0f);
+	AddBoxPart(Overlay, *FString::Printf(TEXT("%sBasket"), *Name.ToString()), FVector2D(Size.X * 0.62f, Size.Y * 0.34f), FMargin(Size.X * 0.16f, Size.Y * 0.30f, 0.0f, 0.0f), MainColor, 0.0f);
+	AddBoxPart(Overlay, *FString::Printf(TEXT("%sHandle"), *Name.ToString()), FVector2D(Size.X * 0.40f, FMath::Max(2.0f, Size.Y * 0.10f)), FMargin(Size.X * 0.07f, Size.Y * 0.17f, 0.0f, 0.0f), MainColor, -18.0f);
+	AddBoxPart(Overlay, *FString::Printf(TEXT("%sFront"), *Name.ToString()), FVector2D(FMath::Max(3.0f, Size.X * 0.10f), Size.Y * 0.32f), FMargin(Size.X * 0.75f, Size.Y * 0.30f, 0.0f, 0.0f), MainColor, -10.0f);
+	AddBoxPart(Overlay, *FString::Printf(TEXT("%sWheelA"), *Name.ToString()), FVector2D(Size.X * 0.14f, Size.X * 0.14f), FMargin(Size.X * 0.26f, Size.Y * 0.72f, 0.0f, 0.0f), ShadowColor, 0.0f);
+	AddBoxPart(Overlay, *FString::Printf(TEXT("%sWheelB"), *Name.ToString()), FVector2D(Size.X * 0.14f, Size.X * 0.14f), FMargin(Size.X * 0.62f, Size.Y * 0.72f, 0.0f, 0.0f), ShadowColor, 0.0f);
+
+	return IconBox;
+}
+
+UWidget* UGreenhouseInventoryWidget::CreateSeedPackIcon(const FName Name, const FVector2D& Size)
+{
+	USizeBox* IconBox = WidgetTree->ConstructWidget<USizeBox>(USizeBox::StaticClass(), Name);
+	IconBox->SetWidthOverride(Size.X);
+	IconBox->SetHeightOverride(Size.Y);
+
+	UOverlay* Overlay = WidgetTree->ConstructWidget<UOverlay>(UOverlay::StaticClass());
+	IconBox->AddChild(Overlay);
+
+	const FLinearColor Packet(0.70f, 0.78f, 0.66f, 1.0f);
+	const FLinearColor PacketDark(0.35f, 0.44f, 0.36f, 1.0f);
+	const FLinearColor Label(0.91f, 0.86f, 0.67f, 1.0f);
+	const FLinearColor Seed(0.25f, 0.86f, 0.34f, 1.0f);
+
+	AddBoxPart(Overlay, *FString::Printf(TEXT("%sBody"), *Name.ToString()), FVector2D(Size.X * 0.58f, Size.Y * 0.62f), FMargin(Size.X * 0.21f, Size.Y * 0.18f, 0.0f, 0.0f), Packet, -6.0f);
+	AddBoxPart(Overlay, *FString::Printf(TEXT("%sTop"), *Name.ToString()), FVector2D(Size.X * 0.44f, Size.Y * 0.12f), FMargin(Size.X * 0.28f, Size.Y * 0.18f, 0.0f, 0.0f), PacketDark, -6.0f);
+	AddBoxPart(Overlay, *FString::Printf(TEXT("%sLabel"), *Name.ToString()), FVector2D(Size.X * 0.34f, Size.Y * 0.22f), FMargin(Size.X * 0.34f, Size.Y * 0.42f, 0.0f, 0.0f), Label, -6.0f);
+	AddBoxPart(Overlay, *FString::Printf(TEXT("%sSeedA"), *Name.ToString()), FVector2D(Size.X * 0.10f, Size.Y * 0.10f), FMargin(Size.X * 0.39f, Size.Y * 0.47f, 0.0f, 0.0f), Seed, -6.0f);
+	AddBoxPart(Overlay, *FString::Printf(TEXT("%sSeedB"), *Name.ToString()), FVector2D(Size.X * 0.10f, Size.Y * 0.10f), FMargin(Size.X * 0.52f, Size.Y * 0.48f, 0.0f, 0.0f), Seed, -6.0f);
+
+	return IconBox;
+}
+
+UWidget* UGreenhouseInventoryWidget::CreateSuppliesIcon(const FName Name, const FVector2D& Size)
+{
+	USizeBox* IconBox = WidgetTree->ConstructWidget<USizeBox>(USizeBox::StaticClass(), Name);
+	IconBox->SetWidthOverride(Size.X);
+	IconBox->SetHeightOverride(Size.Y);
+
+	UOverlay* Overlay = WidgetTree->ConstructWidget<UOverlay>(UOverlay::StaticClass());
+	IconBox->AddChild(Overlay);
+
+	const FLinearColor SoilBag(0.66f, 0.58f, 0.46f, 1.0f);
+	const FLinearColor FertBag(0.63f, 0.86f, 0.72f, 1.0f);
+	const FLinearColor Fold(0.31f, 0.36f, 0.30f, 1.0f);
+	const FLinearColor Label(0.86f, 0.83f, 0.69f, 1.0f);
+
+	AddBoxPart(Overlay, *FString::Printf(TEXT("%sSoil"), *Name.ToString()), FVector2D(Size.X * 0.38f, Size.Y * 0.52f), FMargin(Size.X * 0.15f, Size.Y * 0.32f, 0.0f, 0.0f), SoilBag, -4.0f);
+	AddBoxPart(Overlay, *FString::Printf(TEXT("%sSoilFold"), *Name.ToString()), FVector2D(Size.X * 0.26f, Size.Y * 0.10f), FMargin(Size.X * 0.21f, Size.Y * 0.32f, 0.0f, 0.0f), Fold, -4.0f);
+	AddBoxPart(Overlay, *FString::Printf(TEXT("%sSoilLabel"), *Name.ToString()), FVector2D(Size.X * 0.20f, Size.Y * 0.12f), FMargin(Size.X * 0.24f, Size.Y * 0.55f, 0.0f, 0.0f), Label, -4.0f);
+
+	AddBoxPart(Overlay, *FString::Printf(TEXT("%sFertilizer"), *Name.ToString()), FVector2D(Size.X * 0.38f, Size.Y * 0.52f), FMargin(Size.X * 0.48f, Size.Y * 0.22f, 0.0f, 0.0f), FertBag, 5.0f);
+	AddBoxPart(Overlay, *FString::Printf(TEXT("%sFertilizerFold"), *Name.ToString()), FVector2D(Size.X * 0.26f, Size.Y * 0.10f), FMargin(Size.X * 0.54f, Size.Y * 0.22f, 0.0f, 0.0f), Fold, 5.0f);
+	AddBoxPart(Overlay, *FString::Printf(TEXT("%sFertilizerLabel"), *Name.ToString()), FVector2D(Size.X * 0.20f, Size.Y * 0.12f), FMargin(Size.X * 0.57f, Size.Y * 0.45f, 0.0f, 0.0f), Label, 5.0f);
+
+	return IconBox;
+}
+
+UWidget* UGreenhouseInventoryWidget::CreateEquipmentIcon(const FName Name, const FVector2D& Size)
+{
+	USizeBox* IconBox = WidgetTree->ConstructWidget<USizeBox>(USizeBox::StaticClass(), Name);
+	IconBox->SetWidthOverride(Size.X);
+	IconBox->SetHeightOverride(Size.Y);
+
+	UOverlay* Overlay = WidgetTree->ConstructWidget<UOverlay>(UOverlay::StaticClass());
+	IconBox->AddChild(Overlay);
+
+	const FLinearColor Pot(0.72f, 0.47f, 0.36f, 1.0f);
+	const FLinearColor Metal(0.70f, 0.82f, 0.79f, 1.0f);
+	const FLinearColor Handle(0.26f, 0.48f, 0.36f, 1.0f);
+
+	AddBoxPart(Overlay, *FString::Printf(TEXT("%sPotRim"), *Name.ToString()), FVector2D(Size.X * 0.44f, Size.Y * 0.12f), FMargin(Size.X * 0.13f, Size.Y * 0.40f, 0.0f, 0.0f), Pot, 0.0f);
+	AddBoxPart(Overlay, *FString::Printf(TEXT("%sPotBody"), *Name.ToString()), FVector2D(Size.X * 0.34f, Size.Y * 0.28f), FMargin(Size.X * 0.18f, Size.Y * 0.52f, 0.0f, 0.0f), Pot, 0.0f);
+	AddBoxPart(Overlay, *FString::Printf(TEXT("%sToolHandle"), *Name.ToString()), FVector2D(Size.X * 0.52f, Size.Y * 0.10f), FMargin(Size.X * 0.40f, Size.Y * 0.27f, 0.0f, 0.0f), Handle, -35.0f);
+	AddBoxPart(Overlay, *FString::Printf(TEXT("%sToolHead"), *Name.ToString()), FVector2D(Size.X * 0.20f, Size.Y * 0.18f), FMargin(Size.X * 0.67f, Size.Y * 0.16f, 0.0f, 0.0f), Metal, -35.0f);
+
+	return IconBox;
+}
+
+void UGreenhouseInventoryWidget::AddLeafPart(UOverlay* Overlay, const FName Name, const FVector2D& Size, const FMargin& InPadding, const FLinearColor& Color, float AngleDegrees)
+{
+	AddBoxPart(Overlay, Name, Size, InPadding, Color, AngleDegrees);
+}
+
+void UGreenhouseInventoryWidget::AddBoxPart(UOverlay* Overlay, const FName Name, const FVector2D& Size, const FMargin& InPadding, const FLinearColor& Color, float AngleDegrees)
+{
+	if (!Overlay)
+	{
+		return;
+	}
+
+	USizeBox* Box = WidgetTree->ConstructWidget<USizeBox>(USizeBox::StaticClass(), Name);
+	Box->SetWidthOverride(Size.X);
+	Box->SetHeightOverride(Size.Y);
+	Box->SetRenderTransformPivot(FVector2D(0.5f, 0.5f));
+	Box->SetRenderTransformAngle(AngleDegrees);
+
+	UBorder* Part = WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass());
+	Part->SetBrushColor(Color);
+	Box->AddChild(Part);
+
+	UOverlaySlot* OverlaySlot = Overlay->AddChildToOverlay(Box);
+	OverlaySlot->SetHorizontalAlignment(HAlign_Left);
+	OverlaySlot->SetVerticalAlignment(VAlign_Top);
+	OverlaySlot->SetPadding(InPadding);
+}
+
 void UGreenhouseInventoryWidget::OpenOnlineShop()
 {
 	if (!ShopFrame)
@@ -710,7 +956,8 @@ void UGreenhouseInventoryWidget::OpenOnlineShop()
 	SetInventoryOpen(false);
 	bShopOpen = true;
 	ShopFrame->SetVisibility(ESlateVisibility::Visible);
-	ShowShopHome();
+	CurrentShopBuyCategory = EGreenhouseShopBuyCategory::SeedPacks;
+	ShowPlantBuyPage();
 }
 
 void UGreenhouseInventoryWidget::CloseOnlineShop()
@@ -725,11 +972,7 @@ void UGreenhouseInventoryWidget::CloseOnlineShop()
 
 void UGreenhouseInventoryWidget::RefreshShopHeader()
 {
-	const FText MoneyText = FText::FromString(FString::Printf(TEXT("$%d"), Money));
-	if (ShopMoneyText)
-	{
-		ShopMoneyText->SetText(MoneyText);
-	}
+	const FText MoneyText = FText::AsNumber(Money);
 	if (PlayerMoneyText)
 	{
 		PlayerMoneyText->SetText(MoneyText);
@@ -745,114 +988,169 @@ void UGreenhouseInventoryWidget::SetShopStatus(const FText& StatusText, const FL
 
 	ShopStatusText->SetText(StatusText);
 	ShopStatusText->SetColorAndOpacity(FSlateColor(Color));
+	ShopStatusText->SetVisibility(StatusText.IsEmpty() ? ESlateVisibility::Collapsed : ESlateVisibility::HitTestInvisible);
+}
+
+void UGreenhouseInventoryWidget::RefreshShopTabs()
+{
+	const bool bSellTabActive = CurrentShopPage == EGreenhouseShopPage::SellPlants;
+	const FLinearColor ActiveOuterColor(0.62f, 0.64f, 0.62f, 1.0f);
+	const FLinearColor InactiveOuterColor(0.36f, 0.38f, 0.36f, 0.92f);
+
+	if (ShopBuyTabBackground)
+	{
+		ShopBuyTabBackground->SetBrushColor(bSellTabActive ? InactiveOuterColor : ActiveOuterColor);
+	}
+	if (ShopSellTabBackground)
+	{
+		ShopSellTabBackground->SetBrushColor(bSellTabActive ? ActiveOuterColor : InactiveOuterColor);
+	}
+}
+
+void UGreenhouseInventoryWidget::RefreshShopCategoryTabs()
+{
+	const FLinearColor ActiveOuterColor(0.62f, 0.64f, 0.62f, 1.0f);
+	const FLinearColor InactiveOuterColor(0.36f, 0.38f, 0.36f, 0.92f);
+
+	if (ShopSeedPacksCategoryBackground)
+	{
+		ShopSeedPacksCategoryBackground->SetBrushColor(CurrentShopBuyCategory == EGreenhouseShopBuyCategory::SeedPacks ? ActiveOuterColor : InactiveOuterColor);
+	}
+	if (ShopSuppliesCategoryBackground)
+	{
+		ShopSuppliesCategoryBackground->SetBrushColor(CurrentShopBuyCategory == EGreenhouseShopBuyCategory::Supplies ? ActiveOuterColor : InactiveOuterColor);
+	}
+	if (ShopEquipmentCategoryBackground)
+	{
+		ShopEquipmentCategoryBackground->SetBrushColor(CurrentShopBuyCategory == EGreenhouseShopBuyCategory::Equipment ? ActiveOuterColor : InactiveOuterColor);
+	}
 }
 
 void UGreenhouseInventoryWidget::ShowShopHome()
 {
-	CurrentShopPage = EGreenhouseShopPage::Home;
-	RefreshShopHeader();
-	SetShopStatus(FText::FromString(TEXT("Choose a category.")), FLinearColor(0.78f, 0.86f, 0.80f, 1.0f));
-	if (!ShopContentPanel || !ShopTitleText)
-	{
-		return;
-	}
-
-	ShopTitleText->SetText(FText::FromString(TEXT("Greenhouse Market")));
-	ShopContentPanel->ClearChildren();
-
-	UButton* BuyPlantsButton = CreateShopButton(TEXT("ShopBuyPlantsButton"), FText::FromString(TEXT("Buy Plants")), ShopContentPanel);
-	BuyPlantsButton->OnClicked.AddDynamic(this, &UGreenhouseInventoryWidget::HandleOpenPlantBuyPage);
-
-	UButton* SellPlantsButton = CreateShopButton(TEXT("ShopSellPlantsButton"), FText::FromString(TEXT("Sell Plants")), ShopContentPanel);
-	SellPlantsButton->OnClicked.AddDynamic(this, &UGreenhouseInventoryWidget::HandleOpenPlantSellPage);
-
-	UButton* GardenSuppliesButton = CreateShopButton(TEXT("ShopGardenSuppliesButton"), FText::FromString(TEXT("Garden Supplies")), ShopContentPanel);
-	GardenSuppliesButton->OnClicked.AddDynamic(this, &UGreenhouseInventoryWidget::HandleOpenGardenSuppliesPage);
+	ShowPlantBuyPage();
 }
 
 void UGreenhouseInventoryWidget::ShowPlantBuyPage()
 {
 	CurrentShopPage = EGreenhouseShopPage::BuyPlants;
 	RefreshShopHeader();
-	SetShopStatus(FText::FromString(TEXT("Select quantity and pay.")), FLinearColor(0.78f, 0.86f, 0.80f, 1.0f));
-	if (!ShopContentPanel || !ShopTitleText)
+	RefreshShopTabs();
+	SetShopStatus(FText::GetEmpty(), FLinearColor::White);
+	if (!ShopContentPanel)
 	{
 		return;
 	}
 
-	ShopTitleText->SetText(FText::FromString(TEXT("Buy Plants")));
 	ShopContentPanel->ClearChildren();
+	PlantBuyQuantity = 1;
+	PlantBuyQuantityText = nullptr;
 
-	UTextBlock* ItemText = CreateLabel(FText::FromString(TEXT("Lily - $15 each")), FLinearColor(0.93f, 0.95f, 0.86f, 1.0f), 16);
-	UVerticalBoxSlot* ItemSlot = ShopContentPanel->AddChildToVerticalBox(ItemText);
-	ItemSlot->SetPadding(FMargin(0.0f, 0.0f, 0.0f, 10.0f));
+	UHorizontalBox* CategoryRow = WidgetTree->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass(), TEXT("BuyCategoryRow"));
+	UVerticalBoxSlot* CategoryRowSlot = ShopContentPanel->AddChildToVerticalBox(CategoryRow);
+	CategoryRowSlot->SetPadding(FMargin(0.0f, 4.0f, 0.0f, 28.0f));
+	CategoryRowSlot->SetHorizontalAlignment(HAlign_Left);
 
-	UHorizontalBox* QuantityRow = WidgetTree->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass(), TEXT("PlantQuantityRow"));
-	UVerticalBoxSlot* QuantitySlot = ShopContentPanel->AddChildToVerticalBox(QuantityRow);
-	QuantitySlot->SetPadding(FMargin(0.0f, 0.0f, 0.0f, 12.0f));
+	UBorder* CreatedSeedCategoryBackground = nullptr;
+	UButton* SeedCategoryButton = CreateShopTabButton(
+		TEXT("SeedPacksCategoryButton"),
+		CreateSeedPackIcon(TEXT("SeedPacksCategoryIcon"), FVector2D(46.0f, 38.0f)),
+		CreatedSeedCategoryBackground);
+	ShopSeedPacksCategoryBackground = CreatedSeedCategoryBackground;
+	SeedCategoryButton->OnClicked.AddDynamic(this, &UGreenhouseInventoryWidget::HandleOpenSeedPacksCategory);
+	UHorizontalBoxSlot* SeedCategorySlot = CategoryRow->AddChildToHorizontalBox(SeedCategoryButton);
+	SeedCategorySlot->SetPadding(FMargin(0.0f, 0.0f, 10.0f, 0.0f));
 
-	UButton* MinusButton = CreateShopButton(TEXT("PlantQuantityMinusButton"), FText::FromString(TEXT("-")), nullptr);
-	MinusButton->OnClicked.AddDynamic(this, &UGreenhouseInventoryWidget::DecreasePlantBuyQuantity);
-	UHorizontalBoxSlot* MinusSlot = QuantityRow->AddChildToHorizontalBox(MinusButton);
-	MinusSlot->SetPadding(FMargin(0.0f, 0.0f, 8.0f, 0.0f));
+	UBorder* CreatedSuppliesCategoryBackground = nullptr;
+	UButton* SuppliesCategoryButton = CreateShopTabButton(
+		TEXT("SuppliesCategoryButton"),
+		CreateSuppliesIcon(TEXT("SuppliesCategoryIcon"), FVector2D(48.0f, 40.0f)),
+		CreatedSuppliesCategoryBackground);
+	ShopSuppliesCategoryBackground = CreatedSuppliesCategoryBackground;
+	SuppliesCategoryButton->OnClicked.AddDynamic(this, &UGreenhouseInventoryWidget::HandleOpenSuppliesCategory);
+	UHorizontalBoxSlot* SuppliesCategorySlot = CategoryRow->AddChildToHorizontalBox(SuppliesCategoryButton);
+	SuppliesCategorySlot->SetPadding(FMargin(0.0f, 0.0f, 10.0f, 0.0f));
 
-	PlantBuyQuantityText = CreateLabel(FText::GetEmpty(), FLinearColor(0.94f, 0.98f, 1.0f, 1.0f), 17);
-	UHorizontalBoxSlot* QuantityTextSlot = QuantityRow->AddChildToHorizontalBox(PlantBuyQuantityText);
-	QuantityTextSlot->SetPadding(FMargin(0.0f, 10.0f, 8.0f, 0.0f));
+	UBorder* CreatedEquipmentCategoryBackground = nullptr;
+	UButton* EquipmentCategoryButton = CreateShopTabButton(
+		TEXT("EquipmentCategoryButton"),
+		CreateEquipmentIcon(TEXT("EquipmentCategoryIcon"), FVector2D(48.0f, 40.0f)),
+		CreatedEquipmentCategoryBackground);
+	ShopEquipmentCategoryBackground = CreatedEquipmentCategoryBackground;
+	EquipmentCategoryButton->OnClicked.AddDynamic(this, &UGreenhouseInventoryWidget::HandleOpenEquipmentCategory);
+	UHorizontalBoxSlot* EquipmentCategorySlot = CategoryRow->AddChildToHorizontalBox(EquipmentCategoryButton);
+	EquipmentCategorySlot->SetPadding(FMargin(0.0f));
 
-	UButton* PlusButton = CreateShopButton(TEXT("PlantQuantityPlusButton"), FText::FromString(TEXT("+")), nullptr);
-	PlusButton->OnClicked.AddDynamic(this, &UGreenhouseInventoryWidget::IncreasePlantBuyQuantity);
-	UHorizontalBoxSlot* PlusSlot = QuantityRow->AddChildToHorizontalBox(PlusButton);
-	PlusSlot->SetPadding(FMargin(0.0f));
+	RefreshShopCategoryTabs();
 
-	UButton* PayButton = CreateShopButton(TEXT("PlantPayButton"), FText::FromString(TEXT("Pay")), ShopContentPanel);
-	PayButton->OnClicked.AddDynamic(this, &UGreenhouseInventoryWidget::BuyPlants);
-	IncreasePlantBuyQuantity();
-	DecreasePlantBuyQuantity();
+	UHorizontalBox* ProductRow = WidgetTree->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass(), TEXT("BuyProductRow"));
+	UVerticalBoxSlot* ProductRowSlot = ShopContentPanel->AddChildToVerticalBox(ProductRow);
+	ProductRowSlot->SetPadding(FMargin(0.0f));
+	ProductRowSlot->SetHorizontalAlignment(HAlign_Left);
+
+	if (CurrentShopBuyCategory == EGreenhouseShopBuyCategory::SeedPacks)
+	{
+		UButton* LilyButton = CreateShopProductButton(TEXT("BuyLilyProductButton"), EGreenhouseInventoryItem::Lily, 15, ProductRow);
+		LilyButton->OnClicked.AddDynamic(this, &UGreenhouseInventoryWidget::BuyPlants);
+		return;
+	}
+
+	if (CurrentShopBuyCategory == EGreenhouseShopBuyCategory::Supplies)
+	{
+		UButton* SoilButton = CreateShopProductButton(TEXT("BuySoilBagProductButton"), EGreenhouseInventoryItem::SoilBag, 10, ProductRow);
+		SoilButton->OnClicked.AddDynamic(this, &UGreenhouseInventoryWidget::BuySoilBag);
+
+		UButton* FertilizerButton = CreateShopProductButton(TEXT("BuyFertilizerBagProductButton"), EGreenhouseInventoryItem::FertilizerBag, 14, ProductRow);
+		FertilizerButton->OnClicked.AddDynamic(this, &UGreenhouseInventoryWidget::BuyFertilizerBag);
+		return;
+	}
+
+	UButton* PotButton = CreateShopProductButton(TEXT("BuyEmptyPotProductButton"), EGreenhouseInventoryItem::EmptyPot, 12, ProductRow);
+	PotButton->OnClicked.AddDynamic(this, &UGreenhouseInventoryWidget::BuyEmptyPot);
+
+	UButton* WateringCanButton = CreateShopProductButton(TEXT("BuyWateringCanProductButton"), EGreenhouseInventoryItem::WateringCan, 25, ProductRow);
+	WateringCanButton->OnClicked.AddDynamic(this, &UGreenhouseInventoryWidget::BuyWateringCan);
+
+	UButton* TrowelButton = CreateShopProductButton(TEXT("BuyTrowelProductButton"), EGreenhouseInventoryItem::Trowel, 18, ProductRow);
+	TrowelButton->OnClicked.AddDynamic(this, &UGreenhouseInventoryWidget::BuyTrowel);
+
+	UButton* SecateurButton = CreateShopProductButton(TEXT("BuySecateurProductButton"), EGreenhouseInventoryItem::Secateur, 22, ProductRow);
+	SecateurButton->OnClicked.AddDynamic(this, &UGreenhouseInventoryWidget::BuySecateur);
+}
+
+void UGreenhouseInventoryWidget::ShowShopBuyCategory(EGreenhouseShopBuyCategory Category)
+{
+	CurrentShopBuyCategory = Category;
+	ShowPlantBuyPage();
 }
 
 void UGreenhouseInventoryWidget::ShowPlantSellPage()
 {
 	CurrentShopPage = EGreenhouseShopPage::SellPlants;
 	RefreshShopHeader();
-	if (!ShopContentPanel || !ShopTitleText)
+	RefreshShopTabs();
+	SetShopStatus(FText::GetEmpty(), FLinearColor::White);
+	if (!ShopContentPanel)
 	{
 		return;
 	}
 
-	ShopTitleText->SetText(FText::FromString(TEXT("Sell Plants")));
 	ShopContentPanel->ClearChildren();
 
 	const int32 LilyCount = CountItem(EGreenhouseInventoryItem::Lily);
-	UButton* SellLilyButton = CreateShopButton(TEXT("SellLilyButton"), FText::FromString(FString::Printf(TEXT("Sell Lily (%d) - $8"), LilyCount)), ShopContentPanel);
+	UHorizontalBox* ProductRow = WidgetTree->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass(), TEXT("SellProductRow"));
+	UVerticalBoxSlot* ProductRowSlot = ShopContentPanel->AddChildToVerticalBox(ProductRow);
+	ProductRowSlot->SetPadding(FMargin(0.0f, 8.0f, 0.0f, 0.0f));
+	ProductRowSlot->SetHorizontalAlignment(HAlign_Left);
+
+	UButton* SellLilyButton = CreateShopProductButton(TEXT("SellLilyProductButton"), EGreenhouseInventoryItem::Lily, 8, ProductRow);
 	SellLilyButton->OnClicked.AddDynamic(this, &UGreenhouseInventoryWidget::SellLily);
-	SetShopStatus(LilyCount > 0 ? FText::FromString(TEXT("Click a plant to sell one.")) : FText::FromString(TEXT("No plants in inventory.")), FLinearColor(0.78f, 0.86f, 0.80f, 1.0f));
+	SellLilyButton->SetIsEnabled(LilyCount > 0);
 }
 
 void UGreenhouseInventoryWidget::ShowGardenSuppliesPage()
 {
-	CurrentShopPage = EGreenhouseShopPage::GardenSupplies;
-	RefreshShopHeader();
-	SetShopStatus(FText::FromString(TEXT("Buy greenhouse items.")), FLinearColor(0.78f, 0.86f, 0.80f, 1.0f));
-	if (!ShopContentPanel || !ShopTitleText)
-	{
-		return;
-	}
-
-	ShopTitleText->SetText(FText::FromString(TEXT("Garden Supplies")));
-	ShopContentPanel->ClearChildren();
-
-	UButton* PotButton = CreateShopButton(TEXT("BuyEmptyPotButton"), FText::FromString(TEXT("Empty Pot - $12")), ShopContentPanel);
-	PotButton->OnClicked.AddDynamic(this, &UGreenhouseInventoryWidget::BuyEmptyPot);
-
-	UButton* SoilButton = CreateShopButton(TEXT("BuySoilBagButton"), FText::FromString(TEXT("Soil Bag - $10")), ShopContentPanel);
-	SoilButton->OnClicked.AddDynamic(this, &UGreenhouseInventoryWidget::BuySoilBag);
-
-	UButton* FertilizerButton = CreateShopButton(TEXT("BuyFertilizerBagButton"), FText::FromString(TEXT("Fertilizer Bag - $14")), ShopContentPanel);
-	FertilizerButton->OnClicked.AddDynamic(this, &UGreenhouseInventoryWidget::BuyFertilizerBag);
-
-	UButton* WateringCanButton = CreateShopButton(TEXT("BuyShopWateringCanButton"), FText::FromString(TEXT("Watering Can - $25")), ShopContentPanel);
-	WateringCanButton->OnClicked.AddDynamic(this, &UGreenhouseInventoryWidget::BuyWateringCan);
+	ShowPlantBuyPage();
 }
 
 void UGreenhouseInventoryWidget::ToggleInventory()
@@ -1073,6 +1371,7 @@ void UGreenhouseInventoryWidget::HandleShopBack()
 
 void UGreenhouseInventoryWidget::HandleOpenPlantBuyPage()
 {
+	CurrentShopBuyCategory = EGreenhouseShopBuyCategory::SeedPacks;
 	ShowPlantBuyPage();
 }
 
@@ -1084,6 +1383,21 @@ void UGreenhouseInventoryWidget::HandleOpenPlantSellPage()
 void UGreenhouseInventoryWidget::HandleOpenGardenSuppliesPage()
 {
 	ShowGardenSuppliesPage();
+}
+
+void UGreenhouseInventoryWidget::HandleOpenSeedPacksCategory()
+{
+	ShowShopBuyCategory(EGreenhouseShopBuyCategory::SeedPacks);
+}
+
+void UGreenhouseInventoryWidget::HandleOpenSuppliesCategory()
+{
+	ShowShopBuyCategory(EGreenhouseShopBuyCategory::Supplies);
+}
+
+void UGreenhouseInventoryWidget::HandleOpenEquipmentCategory()
+{
+	ShowShopBuyCategory(EGreenhouseShopBuyCategory::Equipment);
 }
 
 void UGreenhouseInventoryWidget::IncreasePlantBuyQuantity()
@@ -1117,7 +1431,7 @@ void UGreenhouseInventoryWidget::BuyPlants()
 	{
 		AddItem(EGreenhouseInventoryItem::Lily);
 	}
-	SetShopStatus(FText::FromString(FString::Printf(TEXT("Bought %d lilies for $%d."), PlantBuyQuantity, TotalCost)), FLinearColor(0.65f, 0.96f, 0.66f, 1.0f));
+	SetShopStatus(FText::FromString(FString::Printf(TEXT("Bought %d lilies for %d."), PlantBuyQuantity, TotalCost)), FLinearColor(0.65f, 0.96f, 0.66f, 1.0f));
 }
 
 void UGreenhouseInventoryWidget::SellLily()
@@ -1132,7 +1446,7 @@ void UGreenhouseInventoryWidget::SellLily()
 	Money += 8;
 	RefreshShopHeader();
 	ShowPlantSellPage();
-	SetShopStatus(FText::FromString(TEXT("Sold 1 lily for $8.")), FLinearColor(0.65f, 0.96f, 0.66f, 1.0f));
+	SetShopStatus(FText::FromString(TEXT("Sold 1 lily for 8.")), FLinearColor(0.65f, 0.96f, 0.66f, 1.0f));
 }
 
 void UGreenhouseInventoryWidget::BuyEmptyPot()
@@ -1183,6 +1497,40 @@ void UGreenhouseInventoryWidget::BuyWateringCan()
 
 	AddItem(EGreenhouseInventoryItem::WateringCan);
 	SetShopStatus(FText::FromString(TEXT("Bought 1 watering can.")), FLinearColor(0.65f, 0.96f, 0.66f, 1.0f));
+}
+
+void UGreenhouseInventoryWidget::BuyTrowel()
+{
+	if (HasItem(EGreenhouseInventoryItem::Trowel))
+	{
+		SetShopStatus(FText::FromString(TEXT("You already have a trowel.")), FLinearColor(0.95f, 0.76f, 0.36f, 1.0f));
+		return;
+	}
+
+	if (!TrySpendMoney(18))
+	{
+		return;
+	}
+
+	AddItem(EGreenhouseInventoryItem::Trowel);
+	SetShopStatus(FText::FromString(TEXT("Bought 1 trowel.")), FLinearColor(0.65f, 0.96f, 0.66f, 1.0f));
+}
+
+void UGreenhouseInventoryWidget::BuySecateur()
+{
+	if (HasItem(EGreenhouseInventoryItem::Secateur))
+	{
+		SetShopStatus(FText::FromString(TEXT("You already have a secateur.")), FLinearColor(0.95f, 0.76f, 0.36f, 1.0f));
+		return;
+	}
+
+	if (!TrySpendMoney(22))
+	{
+		return;
+	}
+
+	AddItem(EGreenhouseInventoryItem::Secateur);
+	SetShopStatus(FText::FromString(TEXT("Bought 1 secateur.")), FLinearColor(0.65f, 0.96f, 0.66f, 1.0f));
 }
 
 bool UGreenhouseInventoryWidget::HasItem(EGreenhouseInventoryItem Item) const
