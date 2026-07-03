@@ -158,7 +158,7 @@ Dokumentation soll helfen, nicht aufblasen.
 - Wenn ein neues Feature final eingebaut wurde, relevante Dokumentation aktualisieren.
 - Wenn ein Feature nur experimentell/halb fertig ist, nicht als final dokumentieren.
 - Wenn eine Regel, ein Workflow oder ein aktueller Projektstand sich aendert, diese Datei oder die passende Documentation-Datei aktualisieren.
-- Bei neuen GitHub Releases immer die Regeln in `Documentation/RELEASE-RULES.md` einhalten.
+- For new GitHub Releases, always follow the rules in `Documentation/RELEASE-RULES.md`.
 
 Finale Features sollen mindestens hier vermerkt werden:
 

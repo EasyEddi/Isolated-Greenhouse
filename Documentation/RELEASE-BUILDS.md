@@ -1,6 +1,6 @@
 # Release Builds
 
-GitHub Actions baut Release-Downloads automatisch, wenn auf `main` gepusht oder gemerged wird.
+GitHub Actions builds release downloads automatically when changes are pushed or merged into `main`.
 
 Workflow:
 
@@ -8,71 +8,71 @@ Workflow:
 .github/workflows/release-builds.yml
 ```
 
-## Ergebnis
+## Result
 
-Der Workflow erstellt einen GitHub Release, sobald der macOS-Build fertig ist.
+The workflow creates a GitHub Release as soon as the macOS build finishes.
 
-Release-Titel und Version folgen `Documentation/RELEASE-RULES.md`:
+Release titles and versions follow `Documentation/RELEASE-RULES.md`:
 
 ```text
 MVP Alpha X.Y.Z
 ```
 
-Der macOS-Download wird versioniert benannt:
+The macOS download uses a versioned filename:
 
 - `IsolatedGreenhouse_X.Y.Z_macOS.zip`
 
-Wenn der Windows-Build aktiviert ist und ein Windows-Runner online ist, wird danach zusaetzlich angehaengt:
+If the Windows build is enabled and a Windows runner is online, the workflow also attaches:
 
 - `IsolatedGreenhouse_X.Y.Z_Windows.zip`
 
-Windows enthaelt den packaged Unreal-Build mit `.exe`. macOS enthaelt den packaged Mac-Build.
+Windows contains the packaged Unreal build with the `.exe`. macOS contains the packaged Mac build.
 
-Ein einzelnes Windows-`.exe`-Asset soll erst hochgeladen werden, wenn ein echter eigenstaendiger Installer oder self-contained Build existiert. Eine einzelne Unreal-Game-`.exe` aus dem packaged Ordner reicht nicht als funktionierender Download.
+Only upload a single Windows `.exe` asset after a real standalone installer or self-contained build exists. A single Unreal game `.exe` from the packaged folder is not a working download by itself.
 
-## Runner-Anforderung
+## Runner Requirements
 
-Unreal Engine 5.8 ist nicht auf normalen GitHub-hosted Runnern installiert. Deshalb braucht der Workflow selbst gehostete Runner:
+Unreal Engine 5.8 is not installed on normal GitHub-hosted runners. The workflow therefore needs self-hosted runners:
 
-- macOS Runner mit Labels: `self-hosted`, `macOS`
-- optionaler Windows Runner mit Labels: `self-hosted`, `Windows`
+- macOS runner with labels: `self-hosted`, `macOS`
+- optional Windows runner with labels: `self-hosted`, `Windows`
 
-Auf jedem aktivierten Runner muss Unreal Engine 5.8 installiert sein.
+Unreal Engine 5.8 must be installed on every enabled runner.
 
-Erwartete Standardpfade:
+Expected default paths:
 
 ```text
 Windows: C:\Program Files\Epic Games\UE_5.8
 macOS: /Users/Shared/Epic Games/UE_5.8
 ```
 
-Wenn Unreal woanders liegt, die Pfade in `.github/workflows/release-builds.yml` anpassen:
+If Unreal is installed somewhere else, update these values in `.github/workflows/release-builds.yml`:
 
 ```text
 WINDOWS_UE_ROOT
 MAC_UE_ROOT
 ```
 
-Der Windows-Build ist standardmaessig aus, damit der Release nicht ewig in der Warteschlange haengt, wenn kein Windows-Runner registriert ist. Zum Aktivieren gibt es zwei Wege:
+The Windows build is disabled by default so releases do not stay queued forever when no Windows runner is registered. Enable it in one of two ways:
 
-- Repo-Variable `BUILD_WINDOWS_RELEASE` auf `true` setzen, damit Windows bei `main`-Pushes automatisch mitgebaut wird.
-- Beim manuellen Workflow-Start `build_windows` aktivieren.
+- Set the repository variable `BUILD_WINDOWS_RELEASE` to `true` to include Windows on automatic `main` releases.
+- Enable `build_windows` when manually starting the workflow.
 
 ## Git LFS
 
-Der Workflow checkt LFS-Dateien aus und fuehrt `git lfs pull` aus. Die Runner brauchen daher Git LFS.
+The workflow checks out LFS files and runs `git lfs pull`. The runners therefore need Git LFS installed.
 
-## Release-Version und Notes
+## Release Version And Notes
 
-Der Workflow sucht den neuesten Tag im Format:
+The workflow searches for the newest tag matching:
 
 ```text
 mvp-alpha-X.Y.Z
 ```
 
-Bei einem normalen `main`-Push wird standardmaessig ein Patch-Release erstellt. Fuer groessere Releases den Workflow manuell starten und `version_bump`, `release_description` und `release_changelog` setzen.
+For a normal `main` push, the default bump is `patch`. For larger releases, start the workflow manually and set `version_bump`, `release_description`, and `release_changelog`.
 
-Der Release-Body verwendet immer:
+The release body always uses:
 
 ```text
 Description
@@ -80,20 +80,20 @@ Changelog
 Contributors
 ```
 
-Keine automatisch generierten `What's Changed`-/`Full Changelog`-Abschnitte verwenden.
+Do not use automatically generated `What's Changed` or `Full Changelog` sections.
 
-## macOS Runner Stabilitaet
+## macOS Runner Stability
 
-Der macOS Release-Build laeuft mit `caffeinate`, damit der Self-hosted Runner waehrend `RunUAT BuildCookRun` nicht einschlaeft. Der Job hat ein Timeout von 180 Minuten.
+The macOS release build runs with `caffeinate` so the self-hosted runner does not sleep during `RunUAT BuildCookRun`. The job has a 180-minute timeout.
 
-Wenn der macOS Build fehlschlaegt oder abgebrochen wird, laedt der Workflow zusaetzlich das Artifact `IsolatedGreenhouse-macOS-logs` hoch. Darin liegen Unreal-/BuildTool-Logs sowie Snapshot-Dateien zu Speicher, Speicherplatz und laufenden Prozessen. Bei Runner-Verbindungsproblemen zuerst dieses Log-Artifact und danach die lokalen Runner-Diagnose-Logs unter dem Runner-Ordner `_diag/` pruefen.
+If the macOS build fails or gets cancelled, the workflow also uploads the artifact `IsolatedGreenhouse-macOS-logs`. It contains Unreal and BuildTool logs, plus snapshots for memory, disk space, and running processes. For runner connection problems, check this log artifact first, then the local runner diagnostic logs under the runner folder `_diag/`.
 
-## Manuell starten
+## Manual Runs
 
-Der Workflow kann auch manuell ueber GitHub gestartet werden:
+The workflow can also be started manually through GitHub:
 
 ```text
 Actions -> Build Game Releases -> Run workflow
 ```
 
-Wenn dabei auch Windows gebaut werden soll, `build_windows` aktivieren und sicherstellen, dass der Windows-Runner online ist.
+If Windows should be included, enable `build_windows` and make sure the Windows runner is online.

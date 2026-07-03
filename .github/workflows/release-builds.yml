@@ -119,7 +119,7 @@ jobs:
           mac_asset="IsolatedGreenhouse_${version}_macOS.zip"
           windows_asset="IsolatedGreenhouse_${version}_Windows.zip"
 
-          description="${INPUT_DESCRIPTION:-Aktueller MVP-Alpha-Build mit den neuesten stabilen Aenderungen aus main.}"
+          description="${INPUT_DESCRIPTION:-Current MVP Alpha build with the latest stable changes from main.}"
 
           changelog_file="$RUNNER_TEMP/changelog.md"
           : > "$changelog_file"
@@ -142,7 +142,7 @@ jobs:
           fi
 
           if [ ! -s "$changelog_file" ]; then
-            echo "- Release-Build aktualisiert." > "$changelog_file"
+            echo "- Updated the release build." > "$changelog_file"
           fi
 
           {
@@ -162,8 +162,9 @@ jobs:
             echo
             echo "## Contributors"
             echo
-            echo "- EasyEddi"
-            echo "- Tarek Mahn"
+            echo "[![EasyEddi](https://github.com/EasyEddi.png?size=40)](https://github.com/EasyEddi) [@EasyEddi](https://github.com/EasyEddi)"
+            echo
+            echo "[![Tarekke](https://github.com/Tarekke.png?size=40)](https://github.com/Tarekke) [@Tarekke](https://github.com/Tarekke)"
             echo "RELEASE_BODY"
           } >> "$GITHUB_OUTPUT"
 

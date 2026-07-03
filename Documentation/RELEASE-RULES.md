@@ -1,86 +1,94 @@
 # Release Rules
 
-Diese Regeln gelten fuer GitHub Releases von **The Isolated Greenhouse**.
+These rules apply to GitHub Releases for **The Isolated Greenhouse**.
 
-## Release-Titel
+## Release Title
 
-Der Release-Titel folgt immer diesem Format:
+Every release title must use this format:
 
 ```text
 MVP Alpha X.Y.Z
 ```
 
-Der erste Release ist:
+The first release is:
 
 ```text
 MVP Alpha 0.0.0
 ```
 
-## Versionierung
+## Versioning
 
-Versionen verwenden `X.Y.Z`.
+Versions use `X.Y.Z`.
 
-- Kleiner Patch: `Z` wird um 1 erhoeht.
-- Groesserer Patch: `Y` wird um 1 erhoeht, `Z` wird auf 0 gesetzt.
-- Neues Feature oder viele grosse Patches: `X` wird um 1 erhoeht, `Y` und `Z` werden auf 0 gesetzt.
-- `X` bleibt vorerst bei 0, bis Eddi explizit sagt, dass die erste Zahl erhoeht werden soll.
+- Small patch: increase `Z` by 1.
+- Larger patch: increase `Y` by 1 and reset `Z` to 0.
+- New feature or many large patches: increase `X` by 1 and reset `Y` and `Z` to 0.
+- Keep `X` at 0 until Eddi explicitly says the first number should increase.
 
-Wenn unklar ist, welcher Versionssprung passend ist, lieber kleiner bumpen und Eddi fragen.
+If the right bump is unclear, choose the smaller bump or ask Eddi.
 
-## Release-Beschreibung
+## Release Body
 
-Der Release-Body soll keine automatisch generierten Commit-Verweise enthalten. Keine Abschnitte wie `What's Changed`, `New Contributors` oder `Full Changelog` verwenden, ausser Eddi fragt explizit danach.
+The release body must not use automatically generated commit references. Do not use sections such as `What's Changed`, `New Contributors`, or `Full Changelog` unless Eddi explicitly asks for them.
 
-Pflichtformat:
+Required format:
 
 ```markdown
 ## Description
 
-Kurze grobe Zusammenfassung des Updates.
+Short, readable summary of the update.
 
 ## Changelog
 
-- Konkrete Aenderung 1.
-- Konkrete Aenderung 2.
-- Konkrete Aenderung 3.
+- Specific change 1.
+- Specific change 2.
+- Specific change 3.
 
 ## Contributors
 
-- EasyEddi
-- Tarek Mahn
+[![EasyEddi](https://github.com/EasyEddi.png?size=40)](https://github.com/EasyEddi) [@EasyEddi](https://github.com/EasyEddi)
+
+[![Tarekke](https://github.com/Tarekke.png?size=40)](https://github.com/Tarekke) [@Tarekke](https://github.com/Tarekke)
 ```
 
-`Description` ist fuer eine grobe, lesbare Zusammenfassung. `Changelog` ist fuer konkrete Aenderungen ohne Commit-Links.
+`Description` is for a broad, readable summary. `Changelog` is for concrete changes without commit links.
 
 ## Contributors
 
-Tarek muss im ersten Release und bei Releases mit seinen Beitraegen im Body unter `Contributors` stehen, auch wenn GitHub ihn im automatisch berechneten Contributors-Kasten nicht anzeigt.
+Use real GitHub profiles in the release body, not plain names. The current project contributor profiles are:
+
+- `@EasyEddi`: <https://github.com/EasyEddi>
+- `@Tarekke`: <https://github.com/Tarekke>
+
+Tarek must appear in the first release and in releases that include his work, even if GitHub does not show him in the automatically calculated contributor box.
+
+GitHub's automatic contributor box cannot be manually edited. It only shows accounts GitHub can infer from commits and generated release metadata. If a contributor's commits use a local email that is not connected to GitHub, include that contributor manually in the release body with their profile link and avatar image.
 
 ## Assets
 
-GitHub zeigt in Releases immer einen einzigen Bereich namens `Assets`. Dieser Bereich kann nicht in getrennte Tabs wie `Windows` und `Mac` dupliziert oder umbenannt werden. GitHub fuegt ausserdem automatisch `Source code (zip)` und `Source code (tar.gz)` hinzu; diese Auto-Downloads sind keine normalen Release-Assets und sollen nicht als Projekt-Downloads behandelt werden.
+GitHub always shows one release area named `Assets`. This area cannot be duplicated or renamed into separate `Windows` and `Mac` tabs. GitHub also automatically adds `Source code (zip)` and `Source code (tar.gz)` downloads; those are not normal release assets and should not be treated as game downloads.
 
-Plattformen werden deshalb ueber Dateinamen getrennt:
+Separate platforms through asset filenames:
 
 ```text
 IsolatedGreenhouse_X.Y.Z_macOS.zip
 IsolatedGreenhouse_X.Y.Z_Windows.zip
 ```
 
-Ziel fuer Windows ist langfristig:
+Long-term Windows target:
 
 ```text
 IsolatedGreenhouse_X.Y.Z.exe
 ```
 
-Diese `.exe` darf aber nur hochgeladen werden, wenn sie wirklich ein eigenstaendig lauffaehiger Installer oder ein self-contained Build ist. Eine einzelne Unreal-Game-`.exe` aus einem packaged Windows-Ordner reicht normalerweise nicht, weil daneben cooked Content, Paks und weitere Dateien benoetigt werden. Bis ein echter Ein-Datei-Windows-Installer existiert, bleibt Windows als versionierter `.zip`-Download.
+Only upload a `.exe` if it is a genuinely standalone installer or self-contained build. A single Unreal game `.exe` from a packaged Windows folder is usually not enough because it needs cooked content, Paks, and supporting files next to it. Until a real one-file Windows installer exists, keep Windows as a versioned `.zip` download.
 
-## Workflow-Hinweise
+## Workflow Notes
 
-Der Release-Workflow berechnet die naechste Version aus dem neuesten Tag im Format:
+The release workflow calculates the next version from the newest tag matching:
 
 ```text
 mvp-alpha-X.Y.Z
 ```
 
-Bei normalen `main`-Pushes ist der Standard-Bump `patch`. Fuer groessere Releases den Workflow manuell starten und `version_bump`, `release_description` und `release_changelog` passend setzen. Alternativ kann `release_version` fuer eine exakte Version gesetzt werden.
+For normal `main` pushes, the default bump is `patch`. For larger releases, start the workflow manually and set `version_bump`, `release_description`, and `release_changelog`. Alternatively, set `release_version` to force an exact version.
