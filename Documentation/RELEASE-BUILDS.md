@@ -44,6 +44,12 @@ MAC_UE_ROOT
 
 Der Workflow checkt LFS-Dateien aus und fuehrt `git lfs pull` aus. Die Runner brauchen daher Git LFS.
 
+## macOS Runner Stabilitaet
+
+Der macOS Release-Build laeuft mit `caffeinate`, damit der Self-hosted Runner waehrend `RunUAT BuildCookRun` nicht einschlaeft. Der Job hat ein Timeout von 180 Minuten.
+
+Wenn der macOS Build fehlschlaegt oder abgebrochen wird, laedt der Workflow zusaetzlich das Artifact `IsolatedGreenhouse-macOS-logs` hoch. Darin liegen Unreal-/BuildTool-Logs sowie Snapshot-Dateien zu Speicher, Speicherplatz und laufenden Prozessen. Bei Runner-Verbindungsproblemen zuerst dieses Log-Artifact und danach die lokalen Runner-Diagnose-Logs unter dem Runner-Ordner `_diag/` pruefen.
+
 ## Manuell starten
 
 Der Workflow kann auch manuell ueber GitHub gestartet werden:

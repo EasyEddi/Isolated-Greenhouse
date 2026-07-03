@@ -78,6 +78,7 @@ jobs:
   build-macos:
     name: Build macOS release
     runs-on: [self-hosted, macOS]
+    timeout-minutes: 180
 
     steps:
       - name: Checkout
@@ -101,16 +102,20 @@ jobs:
       - name: Build packaged macOS game
         shell: bash
         run: |
+          set -euo pipefail
+
           PROJECT="$GITHUB_WORKSPACE/${{ env.PROJECT_PATH }}"
           ARCHIVE="$GITHUB_WORKSPACE/dist/mac"
           RUN_UAT="${{ env.MAC_UE_ROOT }}/Engine/Build/BatchFiles/RunUAT.sh"
 
-          "$RUN_UAT" BuildCookRun \
+          caffeinate -dimsu "$RUN_UAT" BuildCookRun \
             -project="$PROJECT" \
             -noP4 \
             -platform=Mac \
             -clientconfig=Shipping \
             -serverconfig=Shipping \
+            -unattended \
+            -utf8output \
             -cook \
             -allmaps \
             -build \
@@ -118,6 +123,48 @@ jobs:
             -pak \
             -archive \
             -archivedirectory="$ARCHIVE"
+
+      - name: Collect macOS build logs
+        if: always()
+        shell: bash
+        run: |
+          set +e
+
+          LOG_DIR="$GITHUB_WORKSPACE/release-logs/macos"
+          mkdir -p "$LOG_DIR"
+
+          if [ -d "$HOME/Library/Logs/Unreal Engine" ]; then
+            cp -R "$HOME/Library/Logs/Unreal Engine" "$LOG_DIR/unreal-engine-logs"
+          fi
+
+          if [ -d "$HOME/Library/Application Support/Epic/UnrealBuildTool" ]; then
+            cp -R "$HOME/Library/Application Support/Epic/UnrealBuildTool" "$LOG_DIR/unreal-build-tool"
+          fi
+
+          if [ -d "$GITHUB_WORKSPACE/game/UnrealProject/Saved/Logs" ]; then
+            cp -R "$GITHUB_WORKSPACE/game/UnrealProject/Saved/Logs" "$LOG_DIR/project-saved-logs"
+          fi
+
+          if [ -d "$RUNNER_TEMP" ]; then
+            cp -R "$RUNNER_TEMP" "$LOG_DIR/runner-temp"
+          fi
+
+          if [ -d "$RUNNER_TOOL_CACHE" ]; then
+            mkdir -p "$LOG_DIR/runner-info"
+            du -sh "$RUNNER_TOOL_CACHE" > "$LOG_DIR/runner-info/tool-cache-size.txt" 2>&1
+          fi
+
+          df -h > "$LOG_DIR/disk-space.txt" 2>&1
+          vm_stat > "$LOG_DIR/vm-stat.txt" 2>&1
+          ps aux > "$LOG_DIR/processes.txt" 2>&1
+
+      - name: Upload macOS build logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: IsolatedGreenhouse-macOS-logs
+          path: release-logs/macos
+          if-no-files-found: ignore
 
       - name: Zip macOS release
         shell: bash
