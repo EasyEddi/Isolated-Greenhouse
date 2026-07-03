@@ -67,6 +67,7 @@ jobs:
           INPUT_DESCRIPTION: ${{ github.event.inputs.release_description }}
           INPUT_CHANGELOG: ${{ github.event.inputs.release_changelog }}
           DEFAULT_BUMP: ${{ vars.RELEASE_VERSION_BUMP }}
+          GITHUB_ACTOR: ${{ github.actor }}
         run: |
           set -euo pipefail
 
@@ -123,6 +124,10 @@ jobs:
 
           changelog_file="$RUNNER_TEMP/changelog.md"
           : > "$changelog_file"
+          range="HEAD"
+          if [ -n "$latest_tag" ]; then
+            range="$latest_tag..HEAD"
+          fi
 
           if [ -n "${INPUT_CHANGELOG:-}" ]; then
             IFS=';' read -ra changelog_items <<< "$INPUT_CHANGELOG"
@@ -133,16 +138,30 @@ jobs:
               fi
             done
           else
-            range="HEAD"
-            if [ -n "$latest_tag" ]; then
-              range="$latest_tag..HEAD"
-            fi
-
             git log --no-merges --pretty=format:'- %s' "$range" > "$changelog_file" || true
           fi
 
           if [ ! -s "$changelog_file" ]; then
             echo "- Updated the release build." > "$changelog_file"
+          fi
+
+          release_contributors=()
+          if git log --format='%an <%ae>' "$range" | grep -Eqi 'EasyEddi|Aidan-Scott|eddi@'; then
+            release_contributors+=("@EasyEddi")
+          fi
+          if git log --format='%an <%ae>' "$range" | grep -Eqi 'Tarek|tarek'; then
+            release_contributors+=("@Tarekke")
+          fi
+          if [ ${#release_contributors[@]} -eq 0 ] && [ -n "${GITHUB_ACTOR:-}" ]; then
+            release_contributors+=("@$GITHUB_ACTOR")
+          fi
+
+          if [ ${#release_contributors[@]} -gt 0 ] && ! grep -Eq '@[A-Za-z0-9-]+' "$changelog_file"; then
+            contributors_line="${release_contributors[0]}"
+            for ((i = 1; i < ${#release_contributors[@]}; i++)); do
+              contributors_line="$contributors_line, ${release_contributors[$i]}"
+            done
+            echo "- Release contributors: $contributors_line." >> "$changelog_file"
           fi
 
           {
@@ -159,12 +178,6 @@ jobs:
             echo "## Changelog"
             echo
             cat "$changelog_file"
-            echo
-            echo "## Contributors"
-            echo
-            echo '<a href="https://github.com/EasyEddi"><img src="https://github.com/EasyEddi.png" width="32" height="32" alt="EasyEddi"></a><br><sub>EasyEddi</sub>'
-            echo
-            echo '<a href="https://github.com/Tarekke"><img src="https://github.com/Tarekke.png" width="32" height="32" alt="Tarekke"></a><br><sub>Tarekke</sub>'
             echo "RELEASE_BODY"
           } >> "$GITHUB_OUTPUT"
 

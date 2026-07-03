@@ -43,26 +43,22 @@ Short, readable summary of the update.
 - Specific change 1.
 - Specific change 2.
 - Specific change 3.
-
-## Contributors
-
-<a href="https://github.com/EasyEddi"><img src="https://github.com/EasyEddi.png" width="32" height="32" alt="EasyEddi"></a><br><sub>EasyEddi</sub>
-
-<a href="https://github.com/Tarekke"><img src="https://github.com/Tarekke.png" width="32" height="32" alt="Tarekke"></a><br><sub>Tarekke</sub>
 ```
 
 `Description` is for a broad, readable summary. `Changelog` is for concrete changes without commit links.
 
 ## Contributors
 
-Use real GitHub profiles in the release body, not plain names. The current project contributor profiles are:
+Do not add a manual `Contributors` section to the release body. The native GitHub contributor block below the release body is the desired display because it looks official and matches GitHub's own release UI.
+
+The current project contributor profiles are:
 
 - `@EasyEddi`: <https://github.com/EasyEddi>
 - `@Tarekke`: <https://github.com/Tarekke>
 
-Tarek must appear in the first release and in releases that include his work, even if GitHub does not show him in the automatically calculated contributor box.
+GitHub's automatic contributor box cannot be manually edited. It is triggered by real GitHub account mentions in the release notes and by accounts GitHub can infer from commits and generated release metadata.
 
-GitHub's automatic contributor box cannot be manually edited. It only shows accounts GitHub can infer from commits and generated release metadata. If a contributor's commits use a local email that is not connected to GitHub, include that contributor manually in the release body with their profile link and a small `32x32` avatar image.
+If a contributor's commits use a local email that is not connected to GitHub, mention their GitHub account naturally in the `Changelog`. Do not replace the native block with custom Markdown avatars unless Eddi explicitly asks for a manual workaround.
 
 ## Assets
 

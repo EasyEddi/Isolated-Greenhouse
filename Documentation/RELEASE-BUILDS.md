@@ -77,10 +77,9 @@ The release body always uses:
 ```text
 Description
 Changelog
-Contributors
 ```
 
-Do not use automatically generated `What's Changed` or `Full Changelog` sections.
+Do not add a manual `Contributors` section to the release body. Use GitHub's native contributor block only. Do not use automatically generated `What's Changed` or `Full Changelog` sections unless Eddi explicitly asks for a fully generated GitHub release.
 
 ## macOS Runner Stability
 
