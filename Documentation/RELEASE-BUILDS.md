@@ -1,6 +1,6 @@
 # Release Builds
 
-GitHub Actions baut Release-Zips automatisch, wenn auf `main` gepusht oder gemerged wird.
+GitHub Actions baut Release-Downloads automatisch, wenn auf `main` gepusht oder gemerged wird.
 
 Workflow:
 
@@ -10,15 +10,25 @@ Workflow:
 
 ## Ergebnis
 
-Der Workflow erstellt einen GitHub Release, sobald der macOS-Build fertig ist, mit:
+Der Workflow erstellt einen GitHub Release, sobald der macOS-Build fertig ist.
 
-- `IsolatedGreenhouse-macOS.zip`
+Release-Titel und Version folgen `Documentation/RELEASE-RULES.md`:
+
+```text
+MVP Alpha X.Y.Z
+```
+
+Der macOS-Download wird versioniert benannt:
+
+- `IsolatedGreenhouse_X.Y.Z_macOS.zip`
 
 Wenn der Windows-Build aktiviert ist und ein Windows-Runner online ist, wird danach zusaetzlich angehaengt:
 
-- `IsolatedGreenhouse-Windows.zip`
+- `IsolatedGreenhouse_X.Y.Z_Windows.zip`
 
 Windows enthaelt den packaged Unreal-Build mit `.exe`. macOS enthaelt den packaged Mac-Build.
+
+Ein einzelnes Windows-`.exe`-Asset soll erst hochgeladen werden, wenn ein echter eigenstaendiger Installer oder self-contained Build existiert. Eine einzelne Unreal-Game-`.exe` aus dem packaged Ordner reicht nicht als funktionierender Download.
 
 ## Runner-Anforderung
 
@@ -51,6 +61,26 @@ Der Windows-Build ist standardmaessig aus, damit der Release nicht ewig in der W
 ## Git LFS
 
 Der Workflow checkt LFS-Dateien aus und fuehrt `git lfs pull` aus. Die Runner brauchen daher Git LFS.
+
+## Release-Version und Notes
+
+Der Workflow sucht den neuesten Tag im Format:
+
+```text
+mvp-alpha-X.Y.Z
+```
+
+Bei einem normalen `main`-Push wird standardmaessig ein Patch-Release erstellt. Fuer groessere Releases den Workflow manuell starten und `version_bump`, `release_description` und `release_changelog` setzen.
+
+Der Release-Body verwendet immer:
+
+```text
+Description
+Changelog
+Contributors
+```
+
+Keine automatisch generierten `What's Changed`-/`Full Changelog`-Abschnitte verwenden.
 
 ## macOS Runner Stabilitaet
 
