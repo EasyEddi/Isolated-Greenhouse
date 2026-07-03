@@ -10,10 +10,13 @@ Workflow:
 
 ## Ergebnis
 
-Der Workflow erstellt einen GitHub Release mit:
+Der Workflow erstellt einen GitHub Release, sobald der macOS-Build fertig ist, mit:
+
+- `IsolatedGreenhouse-macOS.zip`
+
+Wenn der Windows-Build aktiviert ist und ein Windows-Runner online ist, wird danach zusaetzlich angehaengt:
 
 - `IsolatedGreenhouse-Windows.zip`
-- `IsolatedGreenhouse-macOS.zip`
 
 Windows enthaelt den packaged Unreal-Build mit `.exe`. macOS enthaelt den packaged Mac-Build.
 
@@ -21,10 +24,10 @@ Windows enthaelt den packaged Unreal-Build mit `.exe`. macOS enthaelt den packag
 
 Unreal Engine 5.8 ist nicht auf normalen GitHub-hosted Runnern installiert. Deshalb braucht der Workflow selbst gehostete Runner:
 
-- Windows Runner mit Labels: `self-hosted`, `Windows`
 - macOS Runner mit Labels: `self-hosted`, `macOS`
+- optionaler Windows Runner mit Labels: `self-hosted`, `Windows`
 
-Auf beiden Runnern muss Unreal Engine 5.8 installiert sein.
+Auf jedem aktivierten Runner muss Unreal Engine 5.8 installiert sein.
 
 Erwartete Standardpfade:
 
@@ -39,6 +42,11 @@ Wenn Unreal woanders liegt, die Pfade in `.github/workflows/release-builds.yml` 
 WINDOWS_UE_ROOT
 MAC_UE_ROOT
 ```
+
+Der Windows-Build ist standardmaessig aus, damit der Release nicht ewig in der Warteschlange haengt, wenn kein Windows-Runner registriert ist. Zum Aktivieren gibt es zwei Wege:
+
+- Repo-Variable `BUILD_WINDOWS_RELEASE` auf `true` setzen, damit Windows bei `main`-Pushes automatisch mitgebaut wird.
+- Beim manuellen Workflow-Start `build_windows` aktivieren.
 
 ## Git LFS
 
@@ -57,3 +65,5 @@ Der Workflow kann auch manuell ueber GitHub gestartet werden:
 ```text
 Actions -> Build Game Releases -> Run workflow
 ```
+
+Wenn dabei auch Windows gebaut werden soll, `build_windows` aktivieren und sicherstellen, dass der Windows-Runner online ist.
