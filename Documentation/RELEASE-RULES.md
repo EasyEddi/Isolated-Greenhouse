@@ -46,9 +46,9 @@ Short, readable summary of the update.
 
 ## Contributors
 
-<a href="https://github.com/EasyEddi"><img src="https://github.com/EasyEddi.png" width="32" height="32" alt="@EasyEddi"></a> [@EasyEddi](https://github.com/EasyEddi)
+<a href="https://github.com/EasyEddi"><img src="https://github.com/EasyEddi.png" width="32" height="32" alt="EasyEddi"></a><br><sub>EasyEddi</sub>
 
-<a href="https://github.com/Tarekke"><img src="https://github.com/Tarekke.png" width="32" height="32" alt="@Tarekke"></a> [@Tarekke](https://github.com/Tarekke)
+<a href="https://github.com/Tarekke"><img src="https://github.com/Tarekke.png" width="32" height="32" alt="Tarekke"></a><br><sub>Tarekke</sub>
 ```
 
 `Description` is for a broad, readable summary. `Changelog` is for concrete changes without commit links.

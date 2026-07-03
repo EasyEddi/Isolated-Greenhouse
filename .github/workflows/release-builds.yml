@@ -162,9 +162,9 @@ jobs:
             echo
             echo "## Contributors"
             echo
-            echo '<a href="https://github.com/EasyEddi"><img src="https://github.com/EasyEddi.png" width="32" height="32" alt="@EasyEddi"></a> [@EasyEddi](https://github.com/EasyEddi)'
+            echo '<a href="https://github.com/EasyEddi"><img src="https://github.com/EasyEddi.png" width="32" height="32" alt="EasyEddi"></a><br><sub>EasyEddi</sub>'
             echo
-            echo '<a href="https://github.com/Tarekke"><img src="https://github.com/Tarekke.png" width="32" height="32" alt="@Tarekke"></a> [@Tarekke](https://github.com/Tarekke)'
+            echo '<a href="https://github.com/Tarekke"><img src="https://github.com/Tarekke.png" width="32" height="32" alt="Tarekke"></a><br><sub>Tarekke</sub>'
             echo "RELEASE_BODY"
           } >> "$GITHUB_OUTPUT"
 
