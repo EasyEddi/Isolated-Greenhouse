@@ -46,9 +46,9 @@ Short, readable summary of the update.
 
 ## Contributors
 
-[![EasyEddi](https://github.com/EasyEddi.png?size=40)](https://github.com/EasyEddi) [@EasyEddi](https://github.com/EasyEddi)
+<a href="https://github.com/EasyEddi"><img src="https://github.com/EasyEddi.png" width="32" height="32" alt="@EasyEddi"></a> [@EasyEddi](https://github.com/EasyEddi)
 
-[![Tarekke](https://github.com/Tarekke.png?size=40)](https://github.com/Tarekke) [@Tarekke](https://github.com/Tarekke)
+<a href="https://github.com/Tarekke"><img src="https://github.com/Tarekke.png" width="32" height="32" alt="@Tarekke"></a> [@Tarekke](https://github.com/Tarekke)
 ```
 
 `Description` is for a broad, readable summary. `Changelog` is for concrete changes without commit links.
@@ -62,7 +62,7 @@ Use real GitHub profiles in the release body, not plain names. The current proje
 
 Tarek must appear in the first release and in releases that include his work, even if GitHub does not show him in the automatically calculated contributor box.
 
-GitHub's automatic contributor box cannot be manually edited. It only shows accounts GitHub can infer from commits and generated release metadata. If a contributor's commits use a local email that is not connected to GitHub, include that contributor manually in the release body with their profile link and avatar image.
+GitHub's automatic contributor box cannot be manually edited. It only shows accounts GitHub can infer from commits and generated release metadata. If a contributor's commits use a local email that is not connected to GitHub, include that contributor manually in the release body with their profile link and a small `32x32` avatar image.
 
 ## Assets
 
